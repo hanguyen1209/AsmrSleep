@@ -1,7 +1,7 @@
 import React from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {Home} from './screens';
+import {Home, Playlists} from './screens';
 
 const Stack = createNativeStackNavigator();
 const Dark = {
@@ -18,12 +18,15 @@ const Dark = {
 const App = () => {
   return (
     <NavigationContainer theme={Dark}>
-      <Stack.Navigator screenOptions={{
-        header(props) {
-            return null
-        },
-      }}>
+      <Stack.Navigator
+        initialRouteName="Home"
+        screenOptions={{
+          header(props) {
+            return null;
+          },
+        }}>
         <Stack.Screen name="Home" component={Home}></Stack.Screen>
+        <Stack.Screen name="Playlist" component={Playlists}></Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
   );

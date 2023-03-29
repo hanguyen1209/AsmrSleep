@@ -1,98 +1,100 @@
 import React, {useState} from 'react';
-import {FlatList} from 'react-native';
-import {
-  Image,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import {TextInput} from 'react-native';
+import {Text} from 'react-native';
+import {Image, SafeAreaView, ScrollView, StyleSheet, View} from 'react-native';
 import * as images from '../assets';
-import {Playlist, SoundBar} from '../components';
+import {
+  Category,
+  CardSound,
+  PlaylistCard,
+  IntensityCard,
+  TypeCard,
+} from '../components';
 import {pt} from '../Utils';
 
-const FILES = [
-  `https://asmrsound.s3.ap-southeast-1.amazonaws.com/Can't+Hide+-+Otis+McDonald.mp3`,
-  `https://asmrsound.s3.ap-southeast-1.amazonaws.com/Emotional+Mess+-+Amy+Lynn+%26+the+Honey+Men.mp3`
+const PLAYLIST = ['relax', 'sleep', 'meditation'];
+const INTENSITY = ['soft', 'medium', 'intense'];
+const TYPE = [
+  'Whispering',
+  'Tapping',
+  'Scratching',
+  'Rain sounds',
+  'Rustling',
+  'Mouth sounds',
+  'Positive messages',
+  'Brushing',
+  'Page Turning',
 ];
-
-const DATA = [
-  {
-    name: 's1',
-    url: FILES[0],
-    volumn: 30,
-    id: 0,
-  },
-  {
-    name: 's2',
-    url: FILES[1],
-    volumn: 50,
-    id: 1,
-  },
-  // {
-  //   name: 's3',
-  //   url: FILES[2],
-  //   volumn: 10,
-  //   id: 2,
-  // },
-  // {
-  //   name: 's4',
-  //   url: FILES[3],
-  //   volumn: 70,
-  //   id: 3,
-  // },
+const GENRE = [
+  'Nature sounds',
+  'Ambience sounds',
+  'Food and drink',
+  'Guided meditation',
+  'Storytelling',
+  'Musical ASMR',
+  'White noise',
+  '3D sound',
+  'Roleplay',
 ];
 
 const Home = () => {
-  const _renderPlaylist = ({item}: any) => {
-    return <SoundBar {...item}/>;
-  };
   return (
     <SafeAreaView style={styles.SafeAreaView}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backTouch}>
-          <Image
-            style={{height: 27 * pt, width: 20 * pt}}
-            source={images.back}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-        <View style={styles.centerView}></View>
-        <View style={styles.recordAndBrowser}>
-          <TouchableOpacity>
-            <Image
-              style={{height: 35 * pt, width: 35 * pt}}
-              source={images.browser}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.record}>
-            <Image
-              style={{height: 35 * pt, width: 35 * pt}}
-              source={images.record}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
       <ScrollView
         showsHorizontalScrollIndicator={false}
-        showsVerticalScrollIndicator={false}
-        horizontal={true}
-        style={styles.playLists}>
-        <Playlist text="test Playlist 1" isPlaying={true} />
-        <Playlist text="test Playlist 2" isPlaying={false} />
-        <Playlist text="Playlist 3" isPlaying={false} />
+        showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <View style={styles.searchIcon}>
+            <Image
+              style={{height: 27 * pt, width: 20 * pt}}
+              source={images.searchGray}
+              resizeMode="contain"
+            />
+          </View>
+          <View style={styles.centerView}>
+            <TextInput
+              style={styles.search}
+              placeholderTextColor="gray"
+              placeholder="Search sounds by ID or name ..."
+            />
+          </View>
+        </View>
+        <Category title="recommended" />
+        <ScrollView
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
+          horizontal={true}>
+          <CardSound intense={1} type={7} />
+          <CardSound intense={2} type={5} />
+          <CardSound intense={3} type={9} />
+        </ScrollView>
+        <Category title="playlist" />
+        <View style={styles.playlistBox}>
+          {PLAYLIST.map((item, index) => (
+            <PlaylistCard key={`--${index}`} type={item} name={item} />
+          ))}
+        </View>
+        <Category title="intense" />
+        <View style={styles.playlistBox}>
+          {INTENSITY.map((item, index) => (
+            <IntensityCard key={`-${index}`} type={item} name={item} />
+          ))}
+        </View>
+        <Category title="type" />
+        <View style={styles.typeBox}>
+          {TYPE.map((item, index) => (
+            <TypeCard key={`__${index}`} type={item} name={item} />
+          ))}
+        </View>
+        <Category title="genre" />
+        <View style={styles.genreBox}>
+          {GENRE.map((item, index) => (
+            <View key={`__${index}`} style={styles.genre}>
+              <Text style={styles.text}>{item}</Text>
+            </View>
+          ))}
+        </View>
       </ScrollView>
-      <View style={styles.soundBars}>
-        <FlatList
-          data={DATA}
-          keyExtractor={(item, index) => `--${index}`}
-          renderItem={_renderPlaylist}
-        />
-      </View>
     </SafeAreaView>
   );
 };
@@ -110,21 +112,46 @@ const styles = StyleSheet.create({
   centerView: {
     flex: 1,
   },
-  recordAndBrowser: {
-    flexDirection: 'row',
-  },
-  record: {
-    marginLeft: 20 * pt,
-  },
-  backTouch: {
+  searchIcon: {
     paddingRight: 20 * pt,
   },
   playLists: {
     padding: 20 * pt,
     maxHeight: 70 * pt,
   },
-  soundBars: {
-    padding: 20 * pt,
+  search: {
+    fontWeight: 'bold',
+    color: 'white',
+    fontSize: 14 * pt,
+  },
+  playlistBox: {
+    flexDirection: 'row',
+  },
+  typeBox: {
+    flexWrap: 'wrap',
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  genreBox: {
+    flexWrap: 'wrap',
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingTop: 30*pt,
+    marginBottom: 300*pt
+  },
+  genre: {
+    padding: 6 * pt,
+    borderRadius: 5 * pt,
+    backgroundColor: '#FFEEEE',
+    margin: 10 * pt,
+  },
+  text: {
+    fontSize: 10 * pt,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    color: '#FF5757',
   },
 });
 
