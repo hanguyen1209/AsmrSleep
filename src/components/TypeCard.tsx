@@ -7,31 +7,31 @@ const TypeCard = (props: any) => {
   const [icon, setIcon] = useState(null);
   useEffect(() => {
     switch (props.type) {
-      case 'Whispering':
+      case 1:
         setIcon(images.whisper);
         break;
-      case 'Tapping':
+      case 2:
         setIcon(images.tap);
         break;
-      case 'Scratching':
+      case 3:
         setIcon(images.scratch);
         break;
-      case 'Rain sounds':
+      case 4:
         setIcon(images.rain);
         break;
-      case 'Rustling':
+      case 5:
         setIcon(images.rust);
         break;
-      case 'Mouth sounds':
+      case 6:
         setIcon(images.mouth);
         break;
-      case 'Positive messages':
+      case 7:
         setIcon(images.message);
         break;
-      case 'Brushing':
+      case 8:
         setIcon(images.brush);
         break;
-      case 'Page Turning':
+      case 9:
         setIcon(images.page);
         break;
       default:
@@ -56,7 +56,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     margin: 20 * pt,
-    width: '22%'
   },
   iconRow: {
     padding: 10 * pt,

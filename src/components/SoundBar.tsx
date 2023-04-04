@@ -12,10 +12,10 @@ const SoundBar = (props: any) => {
   const playbackOptions = {
     continuesToPlayInBackground: true,
     mixWithOthers: true,
+    loop: true
   };
   const sound = useRef(new Player(props.url, playbackOptions)).current;
   const [disable, setDisable] = useState(true);
-
   const _playSound = () => {
     if (!sound.canPlay) return;
     if (isPlaying) {
@@ -42,13 +42,10 @@ const SoundBar = (props: any) => {
         sound.looping = true;
         setDisable(false);
       } else {
-        console.log(err, 'errTest');
         setDisable(true);
       }
     });
-    return () => {
-      sound.destroy();
-    };
+    return () => sound.destroy();
   }, []);
 
   return (
@@ -75,7 +72,7 @@ const SoundBar = (props: any) => {
             maximumValue={100}
             value={props.volumn}
             maximumTrackTintColor="#FFFFFF"
-            minimumTrackTintColor="#FF5757"
+            minimumTrackTintColor={'#FF5757'}
             thumbImage={icon}
             onValueChange={_changeVolumn}
           />

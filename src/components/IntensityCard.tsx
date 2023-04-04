@@ -7,13 +7,13 @@ const IntensityCard = (props: any) => {
   const [icon, setIcon] = useState(null);
   useEffect(() => {
     switch (props.type) {
-      case 'soft':
+      case 1:
         setIcon(images.softIcon);
         break;
-      case 'medium':
+      case 2:
         setIcon(images.mediumIcon);
         break;
-      case 'intense':
+      case 3:
         setIcon(images.intenseIcon);
         break;
       default:
@@ -23,7 +23,9 @@ const IntensityCard = (props: any) => {
   return (
     <View style={styles.container}>
       <View style={styles.iconRow}>
-        {icon ? <Image source={icon} style={styles.icon} resizeMode="contain"/> : null}
+        {icon ? (
+          <Image source={icon} style={styles.icon} resizeMode="contain" />
+        ) : null}
       </View>
       <View style={styles.textRow}>
         <Text style={styles.text}>{props.name}</Text>
@@ -36,25 +38,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     margin: 20 * pt,
-    flex: 1
+    flex: 1,
   },
   iconRow: {
     padding: 10 * pt,
   },
   textRow: {
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   text: {
     color: '#FF5757',
     textTransform: 'uppercase',
     fontSize: 14 * pt,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
   },
   icon: {
     width: 35 * pt,
     height: 35 * pt,
-    resizeMode: 'contain'
-  }
+    resizeMode: 'contain',
+  },
 });
 export default IntensityCard;

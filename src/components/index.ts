@@ -5,3 +5,4 @@ export {default as CardSound} from './CardSound';
 export {default as PlaylistCard} from './PlaylistCard';
 export {default as IntensityCard} from './IntensityCard';
 export {default as TypeCard} from './TypeCard';
+export {default as PlaylistForSelect} from './PlaylistForSelect' 

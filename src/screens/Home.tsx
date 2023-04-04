@@ -1,7 +1,8 @@
-import React, {useState} from 'react';
-import {TextInput} from 'react-native';
+import React, {useEffect, useRef, useState} from 'react';
+import {TextInput, TouchableOpacity} from 'react-native';
 import {Text} from 'react-native';
 import {Image, SafeAreaView, ScrollView, StyleSheet, View} from 'react-native';
+import {default as api} from '../apis';
 import * as images from '../assets';
 import {
   Category,
@@ -11,33 +12,38 @@ import {
   TypeCard,
 } from '../components';
 import {pt} from '../Utils';
+import {PLAYLIST, INTENSITY, TYPE, GENRE} from '../config';
 
-const PLAYLIST = ['relax', 'sleep', 'meditation'];
-const INTENSITY = ['soft', 'medium', 'intense'];
-const TYPE = [
-  'Whispering',
-  'Tapping',
-  'Scratching',
-  'Rain sounds',
-  'Rustling',
-  'Mouth sounds',
-  'Positive messages',
-  'Brushing',
-  'Page Turning',
-];
-const GENRE = [
-  'Nature sounds',
-  'Ambience sounds',
-  'Food and drink',
-  'Guided meditation',
-  'Storytelling',
-  'Musical ASMR',
-  'White noise',
-  '3D sound',
-  'Roleplay',
-];
+const Home = ({navigation}: any) => {
+  const [dataSearch, setDataSearch] = useState([]);
+  const [search, setKeySearch] = useState('');
+  const [recommended, setDataRecommended] = useState([]);
+  const _onChangeText = (text: any) => {
+    setKeySearch(text);
+  };
+  useEffect(() => {
+    api.get(`sounds/recommended`).then(res => {
+      const {data} = res;
+      if (data) {
+        setDataRecommended(data.data);
+      }
+    });
+  }, []);
 
-const Home = () => {
+  useEffect(() => {
+    if (search && search.length > 3) {
+      api.get(`sounds/name/${search}`).then(res => {
+        const {data} = res;
+        if (data) {
+          setDataSearch(data.data);
+        }
+      });
+    }
+  }, [search]);
+
+  const _toScreen = (name: String, props: any) => () =>
+    navigation.navigate(name, props);
+
   return (
     <SafeAreaView style={styles.SafeAreaView}>
       <ScrollView
@@ -56,42 +62,86 @@ const Home = () => {
               style={styles.search}
               placeholderTextColor="gray"
               placeholder="Search sounds by ID or name ..."
+              onChangeText={_onChangeText}
             />
           </View>
         </View>
+        {dataSearch.length && search.length > 3 ? (
+          <View style={styles.searchBox}>
+            <Category
+              title={
+                search.length > 10 ? search.substring(0, 10) + '...' : search
+              }
+            />
+            <ScrollView
+              showsHorizontalScrollIndicator={false}
+              showsVerticalScrollIndicator={false}
+              horizontal={true}>
+              {dataSearch.map((item: any, index) => {
+                return <CardSound key={`-search-${index}`} props={item} />;
+              })}
+            </ScrollView>
+          </View>
+        ) : null}
         <Category title="recommended" />
         <ScrollView
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}
           horizontal={true}>
-          <CardSound intense={1} type={7} />
-          <CardSound intense={2} type={5} />
-          <CardSound intense={3} type={9} />
+          {recommended.map((item: any, index) => {
+            return <CardSound key={`-top-${index}`} props={item} />;
+          })}
         </ScrollView>
         <Category title="playlist" />
         <View style={styles.playlistBox}>
           {PLAYLIST.map((item, index) => (
-            <PlaylistCard key={`--${index}`} type={item} name={item} />
+            <TouchableOpacity style={{flex: 1}} key={`--${index}`}>
+              <PlaylistCard type={item} name={item} />
+            </TouchableOpacity>
           ))}
         </View>
         <Category title="intense" />
         <View style={styles.playlistBox}>
           {INTENSITY.map((item, index) => (
-            <IntensityCard key={`-${index}`} type={item} name={item} />
+            <TouchableOpacity
+              style={{flex: 1}}
+              key={`-${index}`}
+              onPress={_toScreen('Category', {
+                category: 'intense',
+                categoryName: item.name,
+                categoryId: item.id,
+              })}>
+              <IntensityCard type={item.id} name={item.name} />
+            </TouchableOpacity>
           ))}
         </View>
         <Category title="type" />
         <View style={styles.typeBox}>
           {TYPE.map((item, index) => (
-            <TypeCard key={`__${index}`} type={item} name={item} />
+            <TouchableOpacity
+              style={{width: '33%'}}
+              key={`__${index}`}
+              onPress={_toScreen('Category', {
+                category: 'type',
+                categoryName: item.name,
+                categoryId: item.id,
+              })}>
+              <TypeCard type={item.id} name={item.name} />
+            </TouchableOpacity>
           ))}
         </View>
         <Category title="genre" />
         <View style={styles.genreBox}>
           {GENRE.map((item, index) => (
-            <View key={`__${index}`} style={styles.genre}>
+            <TouchableOpacity
+              key={`__${index}`}
+              style={styles.genre}
+              onPress={_toScreen('Category', {
+                category: 'genre',
+                categoryName: item,
+              })}>
               <Text style={styles.text}>{item}</Text>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
       </ScrollView>
@@ -138,8 +188,8 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'center',
-    paddingTop: 30*pt,
-    marginBottom: 300*pt
+    paddingTop: 30 * pt,
+    marginBottom: 300 * pt,
   },
   genre: {
     padding: 6 * pt,
@@ -152,6 +202,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textTransform: 'uppercase',
     color: '#FF5757',
+  },
+  searchBox: {
+    borderWidth: 1 * pt,
+    borderColor: 'white',
+    borderRadius: 10 * pt,
+    marginTop: 10 * pt,
   },
 });
 
