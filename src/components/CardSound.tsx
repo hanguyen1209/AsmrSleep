@@ -1,14 +1,50 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {pt} from '../Utils';
+import React, {useContext, useEffect, useRef, useState} from 'react';
+import {fixUrlSound, pt} from '../Utils';
 import {StyleSheet, View, Text, TouchableOpacity, Image} from 'react-native';
 import * as images from '../assets';
+import {Player} from '@react-native-community/audio-toolkit';
+import {NavigationContext} from '@react-navigation/native';
 
-const CardSound = (props: any) => {
+const CardSound = ({props}: any) => {
+  const navigation = useContext(NavigationContext);
+
   const [intenseIcon, setIntenseIcon] = useState(null);
   const [typeIcon, setTypeIcon] = useState(null);
+  const [soundIsPlaying, setSoundPlaying] = useState(false);
+  const [disable, setDisable] = useState(true);
+  const playbackOptions = {
+    continuesToPlayInBackground: false,
+    mixWithOthers: false,
+    autoDestroy: false,
+  };
+  const sound = useRef(
+    new Player(fixUrlSound(props.url), playbackOptions),
+  ).current;
+
+  const _playSound = () => {
+    if (!sound.canPlay) return;
+    if (sound.isPlaying) {
+      sound.stop();
+      setSoundPlaying(false);
+    } else if (sound.isStopped) {
+      sound.play();
+      setSoundPlaying(true);
+    }
+  };
 
   useEffect(() => {
-    switch (props.intense) {
+    sound.prepare(err => {
+      if (!err) {
+        setDisable(false);
+      } else {
+        setDisable(true);
+      }
+    });
+    return () => sound.destroy();
+  }, []);
+
+  useEffect(() => {
+    switch (parseInt(props.intense)) {
       case 1:
         setIntenseIcon(images.softIcon);
         break;
@@ -21,7 +57,7 @@ const CardSound = (props: any) => {
       default:
         break;
     }
-    switch (props.type) {
+    switch (parseInt(props.type)) {
       case 1:
         setTypeIcon(images.whisper);
         break;
@@ -56,27 +92,43 @@ const CardSound = (props: any) => {
   return (
     <View style={styles.container}>
       <View style={styles.cardBox}>
+        <View style={styles.col1}>
+          <Text style={styles.genre}>{props.genre}</Text>
+        </View>
         <View style={styles.row1}>
-          <Text style={styles.title}>Name of the Sound...</Text>
+          <Text style={styles.title}>{props.name}</Text>
         </View>
         <View style={styles.row2}>
-          <View style={styles.col2}>
-            {intenseIcon ? (
-              <Image style={styles.typeImage} source={intenseIcon} resizeMode="contain"/>
-            ) : null}
-            {typeIcon ? (
-              <Image style={styles.typeImage} source={typeIcon} resizeMode="contain"/>
-            ) : null}
-          </View>
-          <View style={styles.col1}>
-            <Text style={styles.genre}>genre 1</Text>
-          </View>
+          {intenseIcon ? (
+            <Image
+              style={styles.typeImage}
+              source={intenseIcon}
+              resizeMode="contain"
+            />
+          ) : null}
+          {typeIcon ? (
+            <Image
+              style={styles.typeImage}
+              source={typeIcon}
+              resizeMode="contain"
+            />
+          ) : null}
         </View>
       </View>
-      <TouchableOpacity style={styles.play}>
-        <Image style={styles.button} source={images.playCard} />
+      <TouchableOpacity
+        disabled={disable}
+        style={[styles.play, {opacity: disable ? 0.5 : 1}]}
+        onPress={_playSound}>
+        <Image
+          style={styles.button}
+          source={soundIsPlaying ? images.pauseWhiteRound : images.playCard}
+        />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.add}>
+      <TouchableOpacity
+        onPress={() => {
+          navigation?.navigate('Modal', {sound: props});
+        }}
+        style={styles.add}>
         <Image style={styles.button} source={images.addToPlaylist} />
       </TouchableOpacity>
     </View>
@@ -92,10 +144,10 @@ const styles = StyleSheet.create({
     marginTop: 30 * pt,
   },
   typeImage: {
-    width: 15 * pt,
-    height: 15 * pt,
-    marginHorizontal: 3 * pt,
-    resizeMode: 'contain'
+    width: 20 * pt,
+    height: 20 * pt,
+    marginHorizontal: 30 * pt,
+    resizeMode: 'contain',
   },
   box: {
     backgroundColor: 'white',
@@ -119,7 +171,7 @@ const styles = StyleSheet.create({
   },
   row1: {
     flex: 2,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
   },
   row2: {
     flex: 1,
@@ -133,11 +185,11 @@ const styles = StyleSheet.create({
   col2: {
     flex: 1,
     flexDirection: 'row',
-    paddingTop: 10 * pt
+    paddingTop: 10 * pt,
   },
   genre: {
     color: 'gray',
-    fontSize: 12 * pt,
+    fontSize: 11 * pt,
     fontStyle: 'italic',
   },
   type: {

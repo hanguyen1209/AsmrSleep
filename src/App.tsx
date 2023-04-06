@@ -1,34 +1,27 @@
 import React from 'react';
-import {NavigationContainer} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {Home, Playlists} from './screens';
+import AppNavigationContainer from './navigators';
+import store from './store';
+import {Provider} from 'react-redux';
+import {PersistGate} from 'redux-persist/integration/react';
+import {persistStore} from 'redux-persist';
 
-const Stack = createNativeStackNavigator();
-const Dark = {
-  dark: true,
-  colors: {
-    primary: 'rgb(10, 132, 255)',
-    background: 'rgb(1, 1, 1)',
-    card: 'rgb(18, 18, 18)',
-    text: '#FF5757',
-    border: 'rgb(39, 39, 41)',
-    notification: 'rgb(255, 69, 58)',
-  },
-};
+export const AppContext = React.createContext({});
+
+interface Main {
+  mainColor: String;
+}
 const App = () => {
+  const value: Main = {
+    mainColor: '#FF22DD',
+  };
   return (
-    <NavigationContainer theme={Dark}>
-      <Stack.Navigator
-        initialRouteName="Home"
-        screenOptions={{
-          header(props) {
-            return null;
-          },
-        }}>
-        <Stack.Screen name="Home" component={Home}></Stack.Screen>
-        <Stack.Screen name="Playlist" component={Playlists}></Stack.Screen>
-      </Stack.Navigator>
-    </NavigationContainer>
+    <AppContext.Provider value={value}>
+      <Provider store={store}>
+        <PersistGate loading={null} persistor={persistStore(store)}>
+          <AppNavigationContainer></AppNavigationContainer>
+        </PersistGate>
+      </Provider>
+    </AppContext.Provider>
   );
 };
 export default App;

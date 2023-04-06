@@ -45,14 +45,14 @@ const DATA = [
   // },
 ];
 
-const Playlists = () => {
+const Playlists = ({navigation}: any) => {
   const _renderPlaylist = ({item}: any) => {
     return <SoundBar {...item}/>;
   };
   return (
     <SafeAreaView style={styles.SafeAreaView}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backTouch}>
+        <TouchableOpacity onPress={navigation.goBack} style={styles.backTouch}>
           <Image
             style={{height: 27 * pt, width: 20 * pt}}
             source={images.back}
