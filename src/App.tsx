@@ -1,9 +1,12 @@
-import React, {useContext} from 'react';
+import React from 'react';
 import AppNavigationContainer from './navigators';
 import store from './store';
 import {Provider} from 'react-redux';
+import {PersistGate} from 'redux-persist/integration/react';
+import {persistStore} from 'redux-persist';
 
 export const AppContext = React.createContext({});
+
 interface Main {
   mainColor: String;
 }
@@ -14,7 +17,9 @@ const App = () => {
   return (
     <AppContext.Provider value={value}>
       <Provider store={store}>
-        <AppNavigationContainer></AppNavigationContainer>
+        <PersistGate loading={null} persistor={persistStore(store)}>
+          <AppNavigationContainer></AppNavigationContainer>
+        </PersistGate>
       </Provider>
     </AppContext.Provider>
   );
