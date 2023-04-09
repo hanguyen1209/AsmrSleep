@@ -1,8 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {
+  Alert,
   ImageBackground,
-  Switch,
-  SwitchComponent,
   TextInput,
   TouchableOpacity,
 } from 'react-native';
@@ -17,17 +16,41 @@ import {
   IntensityCard,
   TypeCard,
 } from '../components';
-import {pt} from '../Utils';
+import {fixUrlSound, pt} from '../Utils';
 import {PLAYLIST, INTENSITY, TYPE, GENRE} from '../config';
 import Slider from '@react-native-community/slider';
 import Icon from 'react-native-vector-icons/FontAwesome';
-
+import {useDispatch, useSelector} from 'react-redux';
+import {Playlist} from '../store/Playlist';
+import {App, changeCurrentPlaylistIndex} from '../store/App';
+import {Player} from '@react-native-community/audio-toolkit';
 
 const Home = ({navigation}: any) => {
   const [dataSearch, setDataSearch] = useState([]);
   const [search, setKeySearch] = useState('');
   const [recommended, setDataRecommended] = useState([]);
-  const [isFadeOut, setFadeout] = useState(false);
+  const dispatch = useDispatch();
+
+  // const [sounds, setSounds] = useState<Player[]>([]);
+
+  const listSounds = useRef<Array<Player>>([]);
+  const soundPlaying = useRef(0);
+  const [playerStatus, setPlayerStatus] = useState('waiting');
+
+  const playlist = useSelector(
+    (store: {playlist: Array<Playlist>}) => store.playlist,
+  );
+
+  const playlistCurrentIndex = useSelector(
+    (state: {app: App}) => state.app.playlistCurrentIndex,
+  );
+  // const [isFadeOut, setFadeout] = useState(false);
+  const playbackOptions = {
+    continuesToPlayInBackground: true,
+    mixWithOthers: false,
+    autoDestroy: false,
+    loop: true,
+  };
 
   const _onChangeText = (text: any) => {
     setKeySearch(text);
@@ -35,10 +58,74 @@ const Home = ({navigation}: any) => {
   const _toScreen = (name: String, props: any) => () =>
     navigation.navigate(name, props);
 
-  const _onFaddingOut = () => {
-    setFadeout(!isFadeOut);
-  };
+  // const _onFaddingOut = () => {
+  //   setFadeout(!isFadeOut);
+  // };
   const [icon, setIcon] = useState();
+
+  useEffect(() => {
+    // if (soundPlaying) {
+    //   setPlayerStatus('playing');
+    // } else {
+    //   setPlayerStatus('pausing');
+    // }
+  }, []);
+
+  useEffect(() => {
+    if (playlist[playlistCurrentIndex]) {
+      listSounds.current = [];
+      soundPlaying.current = 0;
+      const isLoop = playlist[playlistCurrentIndex].isLoop;
+      const isMix = playlist[playlistCurrentIndex].isMix;
+      playlist[playlistCurrentIndex].sounds.forEach((item, index) => {
+        const options = {...playbackOptions, loop: isLoop};
+        const sound = new Player(fixUrlSound(item.url), options).prepare(
+          err => {
+            if (!err) setPlayerStatus('canPlay');
+          },
+        );
+        listSounds.current.push(sound);
+      });
+    }
+    return () => {
+      console.log('destroyed!', listSounds.current);
+      listSounds.current.forEach(p => p.destroy());
+    };
+  }, [playlistCurrentIndex]);
+
+  useEffect(() => {
+    const sounds = listSounds.current;
+    if (playerStatus == 'playing' && sounds.length) {
+      sounds.forEach((sound, index) => {
+        if (sound.canPlay) {
+          sound
+            .play(err => {
+              if (!err) soundPlaying.current += 1;
+            })
+            .on('ended', () => {
+              if (soundPlaying.current > 0) {
+                soundPlaying.current -= 1;
+                if (soundPlaying.current == 0) {
+                  setPlayerStatus('stop');
+                }
+              }
+            });
+        } else {
+          console.log('cant play');
+        }
+      });
+    } else if (playerStatus == 'pausing' && sounds.length) {
+      sounds.forEach((sound, index) => {
+        sound.pause();
+      });
+    }
+  }, [playerStatus]);
+
+  useEffect(() => {
+    setPlayerStatus('waiting');
+  }, []);
+
+  console.log('current: ' + listSounds.current, ', play: ' + playerStatus);
 
   useEffect(() => {
     api.get(`sounds/recommended`).then(res => {
@@ -50,19 +137,62 @@ const Home = ({navigation}: any) => {
   }, []);
 
   useEffect(() => {
-    if (search && search.length > 3) {
+    if (search && search.length > 1) {
       api.get(`sounds/name/${search}`).then(res => {
         const {data} = res;
         if (data) {
           setDataSearch(data.data);
         }
       });
+    } else {
+      setDataSearch([]);
     }
   }, [search]);
 
   useEffect(() => {
     Icon.getImageSource('circle', 15, 'white').then(setIcon);
   }, []);
+
+  const _previous = () => {
+    if (playlist[playlistCurrentIndex - 1]) {
+      dispatch(changeCurrentPlaylistIndex({id: playlistCurrentIndex - 1}));
+      setPlayerStatus('waiting');
+    }
+  };
+
+  const _next = () => {
+    if (playlist[playlistCurrentIndex + 1]) {
+      dispatch(changeCurrentPlaylistIndex({id: playlistCurrentIndex + 1}));
+      setPlayerStatus('waiting');
+    }
+  };
+
+  const _renderPlaylist = () => {
+    if (!playlist.length) return null;
+    return (
+      <View
+        style={{
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+        <Text style={styles.smallTitle}>
+          {playlist[playlistCurrentIndex - 1]
+            ? playlist[playlistCurrentIndex - 1].name
+            : ''}
+        </Text>
+        <Text style={styles.mainTitle}>
+          {playlist[playlistCurrentIndex]
+            ? playlist[playlistCurrentIndex].name
+            : ''}
+        </Text>
+        <Text style={styles.smallTitle}>
+          {playlist[playlistCurrentIndex + 1]
+            ? playlist[playlistCurrentIndex + 1].name
+            : ''}
+        </Text>
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.SafeAreaView}>
@@ -86,7 +216,7 @@ const Home = ({navigation}: any) => {
             />
           </View>
         </View>
-        {dataSearch.length && search.length > 3 ? (
+        {dataSearch.length && search.length > 1 ? (
           <View style={styles.searchBox}>
             <Category
               title={
@@ -165,115 +295,127 @@ const Home = ({navigation}: any) => {
           ))}
         </View>
       </ScrollView>
-      <View style={styles.panel}>
-        <View style={styles.mainPanel}>
-          <View
-            style={{
-              width: '100%',
-              height: 3 * pt,
-              position: 'absolute',
-              top: '48%',
-              backgroundColor: 'white',
-            }}
-          />
-          <View style={styles.col1}>
-            <TouchableOpacity>
-              <Image
-                style={styles.volumn}
-                resizeMode="contain"
-                source={images.volumn}
-              />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.col2}>
-            <TouchableOpacity>
-              <Image
-                style={styles.previous}
-                resizeMode="contain"
-                source={images.previous}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity style={{marginHorizontal: 20 * pt}}>
-              <Image
-                style={styles.play}
-                resizeMode="contain"
-                source={images.playMusic}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Image
-                style={styles.next}
-                resizeMode="contain"
-                source={images.next}
-              />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.col3}>
-            <TouchableOpacity style={{marginHorizontal: 5 * pt}}>
-              <ImageBackground
-                style={styles.rightIcon}
-                resizeMode="contain"
-                source={images.speed}>
-                <Text
-                  style={{
-                    fontSize: 9 * pt,
-                    fontWeight: 'bold',
-                    fontStyle: 'italic',
-                  }}>
-                  1.5x
-                </Text>
-              </ImageBackground>
-            </TouchableOpacity>
-            <TouchableOpacity style={{marginHorizontal: 5 * pt}}>
-              <ImageBackground
-                style={styles.rightIcon}
-                resizeMode="contain"
-                source={images.timer}>
-                <Text
-                  style={{
-                    fontSize: 9 * pt,
-                    fontWeight: 'bold',
-                    fontStyle: 'italic',
-                  }}>
-                  25m
-                </Text>
-              </ImageBackground>
-            </TouchableOpacity>
-          </View>
-        </View>
-        <View style={styles.lists}>
-          <View
-            style={{
-              height: 30 * pt,
-              width: '100%',
-              marginBottom: 10 * pt,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-            <Slider
-              // disabled={disable}
-              style={{width: "70%", height: 20}}
-              minimumValue={0}
-              maximumValue={100}
-              // value={77}
-              maximumTrackTintColor="#FFFFFF"
-              minimumTrackTintColor={'#FF5757'}
-              thumbImage={icon}
-              // onValueChange={_changeVolumn}
-              step={1}
+      {playlist.length ? (
+        <View style={styles.panel}>
+          <View style={styles.mainPanel}>
+            <View
+              style={{
+                width: '100%',
+                height: 3 * pt,
+                position: 'absolute',
+                top: '48%',
+                backgroundColor: 'white',
+              }}
             />
+            <View style={styles.col1}>
+              <TouchableOpacity>
+                <ImageBackground
+                  style={styles.volumn}
+                  resizeMode="contain"
+                  source={images.volumn}
+                />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.col2}>
+              <TouchableOpacity onPress={_previous}>
+                <ImageBackground
+                  style={styles.previous}
+                  resizeMode="contain"
+                  source={images.previous}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                disabled={playerStatus == 'waiting'}
+                onPress={() => {
+                  if (['stop', 'canPlay', 'pausing'].includes(playerStatus)) {
+                    setPlayerStatus('playing');
+                  } else {
+                    setPlayerStatus('pausing');
+                  }
+                }}
+                style={{
+                  marginHorizontal: 20 * pt,
+                  opacity: playerStatus == 'waiting' ? 0.5 : 1,
+                }}>
+                <ImageBackground
+                  style={styles.play}
+                  resizeMode="contain"
+                  source={
+                    ['stop', 'canPlay', 'pausing'].includes(playerStatus)
+                      ? images.playMusic
+                      : images.pauseWhiteRound
+                  }
+                />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={_next}>
+                <ImageBackground
+                  style={styles.next}
+                  resizeMode="contain"
+                  source={images.next}
+                />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.col3}>
+              <TouchableOpacity style={{marginHorizontal: 5 * pt}}>
+                <ImageBackground
+                  style={styles.rightIcon}
+                  resizeMode="contain"
+                  source={images.speed}>
+                  <Text
+                    style={{
+                      fontSize: 9 * pt,
+                      fontWeight: 'bold',
+                      fontStyle: 'italic',
+                    }}>
+                    1.5x
+                  </Text>
+                </ImageBackground>
+              </TouchableOpacity>
+              <TouchableOpacity style={{marginHorizontal: 5 * pt}}>
+                <ImageBackground
+                  style={styles.rightIcon}
+                  resizeMode="contain"
+                  source={images.timer}>
+                  <Text
+                    style={{
+                      fontSize: 9 * pt,
+                      fontWeight: 'bold',
+                      fontStyle: 'italic',
+                    }}>
+                    25m
+                  </Text>
+                </ImageBackground>
+              </TouchableOpacity>
+            </View>
           </View>
-          <Text style={styles.smallTitle}>
-            playlist 1 playlist 1 playlist 1
-          </Text>
-          <Text style={styles.mainTitle}>
-            playlist 2 playlist 1 playlist 3 playlist 4 playlist 5
-          </Text>
-          <Text style={styles.smallTitle}>
-            playlist 3 playlist 1 playlist 1 playlist 1
-          </Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Playlist')}
+            style={styles.lists}>
+            <View
+              style={{
+                height: 30 * pt,
+                width: '100%',
+                marginBottom: 10 * pt,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              <Slider
+                // disabled={disable}
+                style={{width: '70%', height: 20}}
+                minimumValue={0}
+                maximumValue={100}
+                // value={77}
+                maximumTrackTintColor="#FFFFFF"
+                minimumTrackTintColor={'#FF5757'}
+                thumbImage={icon}
+                // onValueChange={_changeVolumn}
+                step={1}
+              />
+            </View>
+            {_renderPlaylist()}
+          </TouchableOpacity>
         </View>
-      </View>
+      ) : null}
     </SafeAreaView>
   );
 };
@@ -292,7 +434,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   col2: {
-    flex: 1,
+    flex: 4,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',

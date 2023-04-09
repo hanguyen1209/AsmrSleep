@@ -16,6 +16,7 @@ const CardSound = ({props}: any) => {
     continuesToPlayInBackground: false,
     mixWithOthers: false,
     autoDestroy: false,
+    loop: true,
   };
   const sound = useRef(
     new Player(fixUrlSound(props.url), playbackOptions),
@@ -36,6 +37,7 @@ const CardSound = ({props}: any) => {
     sound.prepare(err => {
       if (!err) {
         setDisable(false);
+        sound.looping = true;
       } else {
         setDisable(true);
       }

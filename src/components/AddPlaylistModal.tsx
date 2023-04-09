@@ -32,6 +32,7 @@ const AddPlaylistModal = ({navigation, route}: any) => {
         id: route.params.sound.id,
         online: true,
         volumn: 80,
+        name: route.params.sound.name
       };
       const data = {
         id,
@@ -39,8 +40,10 @@ const AddPlaylistModal = ({navigation, route}: any) => {
       };
       dispatch(addToOldPlaylist(data));
     } else if (name.current && id === null) {
-      const data: {name: String; sounds: Array<Sound>} = {
+      const data: {isMix: Boolean,isLoop: Boolean,name: String; sounds: Array<Sound>} = {
         name: name.current,
+        isMix: false,
+        isLoop: false,
         sounds: [
           {
             url: route.params.sound.url,
