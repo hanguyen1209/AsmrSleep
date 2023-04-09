@@ -9,46 +9,41 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import {useDispatch, useSelector} from 'react-redux';
 import * as images from '../assets';
-import {Playlist, SoundBar} from '../components';
+import {Playlist, SoundBar, Toggle} from '../components';
+import {App} from '../store/App';
+import {
+  Playlist as PlaylistType,
+  updateIsLoop,
+  updateIsMix,
+} from '../store/Playlist';
 import {pt} from '../Utils';
 
-const FILES = [
-  `https://asmrsound.s3.ap-southeast-1.amazonaws.com/Can't+Hide+-+Otis+McDonald.mp3`,
-  `https://asmrsound.s3.ap-southeast-1.amazonaws.com/Emotional+Mess+-+Amy+Lynn+%26+the+Honey+Men.mp3`
-];
-
-const DATA = [
-  {
-    name: 's1',
-    url: FILES[0],
-    volumn: 30,
-    id: 0,
-  },
-  {
-    name: 's2',
-    url: FILES[1],
-    volumn: 50,
-    id: 1,
-  },
-  // {
-  //   name: 's3',
-  //   url: FILES[2],
-  //   volumn: 10,
-  //   id: 2,
-  // },
-  // {
-  //   name: 's4',
-  //   url: FILES[3],
-  //   volumn: 70,
-  //   id: 3,
-  // },
-];
-
 const Playlists = ({navigation}: any) => {
+  const dispatch = useDispatch();
   const _renderPlaylist = ({item}: any) => {
-    return <SoundBar {...item}/>;
+    return <SoundBar {...item} />;
   };
+
+  const playlist = useSelector(
+    (store: {playlist: Array<PlaylistType>}) => store.playlist,
+  );
+
+  const playlistCurrentIndex = useSelector(
+    (state: {app: App}) => state.app.playlistCurrentIndex,
+  );
+
+  const _changeLooping = () => {
+    dispatch(updateIsLoop({id: playlistCurrentIndex}));
+  };
+
+  const _changeMixing = () => {
+    dispatch(updateIsMix({id: playlistCurrentIndex}));
+  };
+
+  const _share = () => {};
+
   return (
     <SafeAreaView style={styles.SafeAreaView}>
       <View style={styles.header}>
@@ -82,22 +77,98 @@ const Playlists = ({navigation}: any) => {
         showsVerticalScrollIndicator={false}
         horizontal={true}
         style={styles.playLists}>
-        <Playlist text="test Playlist 1" isPlaying={true} />
-        <Playlist text="test Playlist 2" isPlaying={false} />
-        <Playlist text="Playlist 3" isPlaying={false} />
+        {playlist.map((item, index) => (
+          <Playlist
+            key={'p-' + index}
+            text={item.name}
+            isPlaying={index == playlistCurrentIndex}
+            id={index}
+          />
+        ))}
       </ScrollView>
+
       <View style={styles.soundBars}>
         <FlatList
-          data={DATA}
+          data={playlist[playlistCurrentIndex]?.sounds}
           keyExtractor={(item, index) => `--${index}`}
           renderItem={_renderPlaylist}
         />
+      </View>
+      <View style={styles.bottom}>
+        <View style={styles.toggleBox}>
+          <Toggle
+            isEnabled={playlist[playlistCurrentIndex].isLoop}
+            onValueChange={_changeLooping}></Toggle>
+          <Text style={styles.toggleTitle}>Loop</Text>
+        </View>
+        <View
+          style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+          <TouchableOpacity style={styles.share} onPress={_share}>
+            <Image
+              style={{
+                resizeMode: 'contain',
+                width: 30 * pt,
+                height: 30 * pt,
+              }}
+              resizeMode="contain"
+              source={images.shareIcon}
+            />
+            <Text style={styles.shareTitle}>Share {`\n`} your playlist</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.toggleBox}>
+          <Toggle
+            isEnabled={playlist[playlistCurrentIndex].isMix}
+            onValueChange={_changeMixing}></Toggle>
+          <Text style={styles.toggleTitle}>Mix</Text>
+        </View>
       </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  shareTitle: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    fontSize: 12 * pt,
+  },
+  bottom: {
+    padding: 10 * pt,
+    height: 100 * pt,
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  toggleTitle: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 12 * pt,
+    marginTop: 5 * pt,
+  },
+  toggleBox: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'column',
+    paddingHorizontal: 20 * pt,
+  },
+  share: {
+    width: 130 * pt,
+    height: 50 * pt,
+    backgroundColor: '#FF5757',
+    borderRadius: 15 * pt,
+    borderWidth: 3 * pt,
+    borderColor: 'white',
+    marginBottom: 8 * pt,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -125,6 +196,7 @@ const styles = StyleSheet.create({
   },
   soundBars: {
     padding: 20 * pt,
+    flex: 1,
   },
 });
 

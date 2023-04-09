@@ -1,30 +1,61 @@
 import React from 'react';
 import {pt} from '../Utils';
-import {Image, StyleSheet, View, Text, TextInput, TouchableOpacity, Alert} from 'react-native';
+import {
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
 import * as images from '../assets';
+import {useDispatch} from 'react-redux';
+import {changeCurrentPlaylistIndex} from '../store/App';
+import {deletePlaylist} from '../store/Playlist';
 
 interface Playlist {
   isPlaying: boolean;
-  text: string;
+  text: String;
+  id: number;
 }
 
-const Playlist = ({isPlaying, text}: Playlist) => {
+const Playlist = ({isPlaying, text, id}: Playlist) => {
+  const dispatch = useDispatch();
+
   const choosePlaylist = (id: number) => {
-    return () => {
-      Alert.alert('ok')
-    }
-  }
+    return () => dispatch(changeCurrentPlaylistIndex({id: id}));
+  };
+
+  const deleteAPlaylist = () =>
+    Alert.alert(`Do you want to delete ${text} ?`, '', [
+      {
+        text: 'No',
+        style: 'cancel',
+      },
+      {
+        text: 'OK',
+        onPress: () => {
+          dispatch(deletePlaylist({id: id}));
+        },
+      },
+    ]);
 
   return (
-    <TouchableOpacity onPress={choosePlaylist(123)} style={styles.container}>
-      <TouchableOpacity style={{...styles.close, backgroundColor: isPlaying ? '#FF5757' : 'gray'}}>
+    <TouchableOpacity onPress={choosePlaylist(id)} style={styles.container}>
+      <TouchableOpacity
+        onPress={deleteAPlaylist}
+        style={{
+          ...styles.close,
+          backgroundColor: isPlaying ? '#FF5757' : 'gray',
+        }}>
         <Image
           source={images.closeWhite}
           resizeMode="contain"
           style={styles.x}
         />
       </TouchableOpacity>
-      <Text style={{...styles.text, color: isPlaying ? '#FF5757' : 'gray'}}>{text}</Text>
+      <Text style={{...styles.text, color: isPlaying ? '#FF5757' : 'gray'}}>
+        {text}
+      </Text>
     </TouchableOpacity>
   );
 };

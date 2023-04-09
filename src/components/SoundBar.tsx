@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {pt} from '../Utils';
+import {fixUrlSound, pt} from '../Utils';
 import * as images from '../assets';
 import Slider from '@react-native-community/slider';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -12,9 +12,11 @@ const SoundBar = (props: any) => {
   const playbackOptions = {
     continuesToPlayInBackground: true,
     mixWithOthers: true,
-    loop: true
+    loop: true,
   };
-  const sound = useRef(new Player(props.url, playbackOptions)).current;
+  const sound = useRef(
+    new Player(fixUrlSound(props.url), playbackOptions),
+  ).current;
   const [disable, setDisable] = useState(true);
   const _playSound = () => {
     if (!sound.canPlay) return;
@@ -39,7 +41,7 @@ const SoundBar = (props: any) => {
     sound.prepare(err => {
       if (!err) {
         sound.volume = parseInt(props.volumn);
-        sound.looping = true;
+        // sound.looping = true;
         setDisable(false);
       } else {
         setDisable(true);
@@ -50,19 +52,25 @@ const SoundBar = (props: any) => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={disable ? styles.disable : styles.enable}
-        disabled={disable}
-        onPress={_playSound}>
+      <TouchableOpacity>
         <Image
-          style={styles.play}
-          source={isPlaying ? images.playWhiteRound : images.pauseWhiteRound}
+          style={styles.remove}
+          source={images.closeWhiteRound}
           resizeMode="contain"
         />
       </TouchableOpacity>
       <View style={styles.main}>
         <View style={styles.above}>
-          <Text style={styles.text1}>{props.name}</Text>
+          <View style={{flex: 1}}>
+            <Text style={styles.text1}>{props.name}</Text>
+          </View>
+          <View style={{justifyContent: 'flex-end'}}>
+            <Image
+              style={{width: 20 * pt, height: 20 * pt, opacity: 0.7}}
+              resizeMode="contain"
+              source={images.volumn}
+            />
+          </View>
         </View>
         <View style={styles.below}>
           <Slider
@@ -74,22 +82,19 @@ const SoundBar = (props: any) => {
             maximumTrackTintColor="#FFFFFF"
             minimumTrackTintColor={'#FF5757'}
             thumbImage={icon}
+            onSlidingComplete={() => {
+              console.log('ok');
+            }}
             onValueChange={_changeVolumn}
           />
-          <Text style={styles.text2}>{props.id}</Text>
+          <Text style={styles.text2}>ID: {props.id}</Text>
         </View>
       </View>
-      <TouchableOpacity>
-        <Image
-          style={styles.remove}
-          source={images.closeWhiteRound}
-          resizeMode="contain"
-        />
-      </TouchableOpacity>
+
       <TouchableOpacity disabled={disable}>
         <Image
           style={styles.download}
-          source={images.downloadGray}
+          source={disable ? images.downloadGray : images.downloadWhite}
           resizeMode="contain"
         />
       </TouchableOpacity>
@@ -118,7 +123,7 @@ const styles = StyleSheet.create({
   },
   main: {
     flex: 1,
-    paddingHorizontal: 10 * pt,
+    paddingHorizontal: 20 * pt,
     height: 35 * pt,
   },
   above: {
