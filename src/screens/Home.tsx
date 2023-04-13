@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {
-  Alert,
   ImageBackground,
+  Modal,
   TextInput,
   TouchableOpacity,
 } from 'react-native';
@@ -18,11 +18,10 @@ import {
 } from '../components';
 import {fixUrlSound, pt} from '../Utils';
 import {PLAYLIST, INTENSITY, TYPE, GENRE} from '../config';
-import Slider from '@react-native-community/slider';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {useDispatch, useSelector} from 'react-redux';
 import {Playlist} from '../store/Playlist';
-import {App, changeCurrentPlaylistIndex} from '../store/App';
+import {App, changeCurrentPlaylistIndex, setInitial} from '../store/App';
 import {Player} from '@react-native-community/audio-toolkit';
 
 const Home = ({navigation}: any) => {
@@ -31,11 +30,16 @@ const Home = ({navigation}: any) => {
   const [recommended, setDataRecommended] = useState([]);
   const dispatch = useDispatch();
 
-  // const [sounds, setSounds] = useState<Player[]>([]);
-
   const listSounds = useRef<Array<Player>>([]);
   const soundPlaying = useRef(0);
   const [playerStatus, setPlayerStatus] = useState('waiting');
+
+  const [playerBar, setPlayerBarStatus] = useState({
+    mute: false,
+    speed: 1,
+    timer: -1,
+    fading: false,
+  });
 
   const playlist = useSelector(
     (store: {playlist: Array<Playlist>}) => store.playlist,
@@ -44,12 +48,10 @@ const Home = ({navigation}: any) => {
   const playlistCurrentIndex = useSelector(
     (state: {app: App}) => state.app.playlistCurrentIndex,
   );
-  // const [isFadeOut, setFadeout] = useState(false);
   const playbackOptions = {
     continuesToPlayInBackground: true,
-    mixWithOthers: false,
+    mixWithOthers: true,
     autoDestroy: false,
-    loop: true,
   };
 
   const _onChangeText = (text: any) => {
@@ -58,46 +60,63 @@ const Home = ({navigation}: any) => {
   const _toScreen = (name: String, props: any) => () =>
     navigation.navigate(name, props);
 
-  // const _onFaddingOut = () => {
-  //   setFadeout(!isFadeOut);
-  // };
   const [icon, setIcon] = useState();
 
+  const [soundId, setId] = useState(-1);
+
+  const init = useSelector((state: {app: App}) => state.app.init);
+
+  const [isNext, setIsNext] = useState(false);
+
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const initDataSounds = () => {
+    if (playlist.length == 0) return;
+    setIsNext(false);
+    listSounds.current = [];
+    setId(-1);
+    soundPlaying.current = 0;
+    setPlayerStatus('waiting');
+    const isLoop = playlist[playlistCurrentIndex]?.isLoop;
+    const isMix = playlist[playlistCurrentIndex]?.isMix;
+    playlist[playlistCurrentIndex].sounds.forEach((item, index) => {
+      const options = {...playbackOptions};
+      const sound = new Player(fixUrlSound(item.url), options).prepare(err => {
+        if (!err) setPlayerStatus(isNext ? 'playing' : 'canPlay');
+      });
+      if (isLoop && isMix) {
+        sound.looping = true;
+      }
+      listSounds.current.push(sound);
+    });
+  };
+
   useEffect(() => {
-    // if (soundPlaying) {
-    //   setPlayerStatus('playing');
-    // } else {
-    //   setPlayerStatus('pausing');
-    // }
-  }, []);
+    if (init) {
+      initDataSounds();
+      return () => {
+        listSounds.current.forEach(p => p.destroy());
+      };
+    }
+    return;
+  }, [init]);
 
   useEffect(() => {
     if (playlist[playlistCurrentIndex]) {
-      listSounds.current = [];
-      soundPlaying.current = 0;
-      const isLoop = playlist[playlistCurrentIndex].isLoop;
-      const isMix = playlist[playlistCurrentIndex].isMix;
-      playlist[playlistCurrentIndex].sounds.forEach((item, index) => {
-        const options = {...playbackOptions, loop: isLoop};
-        const sound = new Player(fixUrlSound(item.url), options).prepare(
-          err => {
-            if (!err) setPlayerStatus('canPlay');
-          },
-        );
-        listSounds.current.push(sound);
-      });
+      dispatch(setInitial());
     }
-    return () => {
-      console.log('destroyed!', listSounds.current);
-      listSounds.current.forEach(p => p.destroy());
-    };
   }, [playlistCurrentIndex]);
 
   useEffect(() => {
     const sounds = listSounds.current;
+    const isLoop = playlist[playlistCurrentIndex]?.isLoop;
+    const isMix = playlist[playlistCurrentIndex]?.isMix;
     if (playerStatus == 'playing' && sounds.length) {
-      sounds.forEach((sound, index) => {
-        if (sound.canPlay) {
+      if (!isMix) {
+        if (soundId < 0) setId(0);
+        else sounds[soundId]?.play();
+      } else {
+        sounds.forEach((sound, index) => {
           sound
             .play(err => {
               if (!err) soundPlaying.current += 1;
@@ -110,22 +129,37 @@ const Home = ({navigation}: any) => {
                 }
               }
             });
-        } else {
-          console.log('cant play');
-        }
-      });
+        });
+      }
     } else if (playerStatus == 'pausing' && sounds.length) {
       sounds.forEach((sound, index) => {
         sound.pause();
       });
+    } else if (playerStatus == 'stop') {
+      if (!isLoop) {
+        setIsNext(true);
+        _next();
+      }
     }
   }, [playerStatus]);
 
   useEffect(() => {
-    setPlayerStatus('waiting');
-  }, []);
-
-  console.log('current: ' + listSounds.current, ', play: ' + playerStatus);
+    const sounds = listSounds.current;
+    if (soundId < 0 || !sounds[soundId]) return;
+    const isLoop = playlist[playlistCurrentIndex]?.isLoop;
+    sounds[soundId].play().on('ended', () => {
+      if (sounds.length > 0) {
+        if (soundId < sounds.length - 1) setId(soundId + 1);
+        else {
+          if (isLoop) setId(0);
+          else {
+            setIsNext(true);
+            _next();
+          }
+        }
+      }
+    });
+  }, [soundId]);
 
   useEffect(() => {
     api.get(`sounds/recommended`).then(res => {
@@ -156,14 +190,16 @@ const Home = ({navigation}: any) => {
   const _previous = () => {
     if (playlist[playlistCurrentIndex - 1]) {
       dispatch(changeCurrentPlaylistIndex({id: playlistCurrentIndex - 1}));
-      setPlayerStatus('waiting');
+      dispatch(setInitial());
     }
   };
 
   const _next = () => {
     if (playlist[playlistCurrentIndex + 1]) {
       dispatch(changeCurrentPlaylistIndex({id: playlistCurrentIndex + 1}));
-      setPlayerStatus('waiting');
+    } else {
+      dispatch(changeCurrentPlaylistIndex({id: 0}));
+      if (playlist.length == 1) dispatch(setInitial());
     }
   };
 
@@ -174,6 +210,7 @@ const Home = ({navigation}: any) => {
         style={{
           alignItems: 'center',
           justifyContent: 'center',
+          flexDirection: 'row',
         }}>
         <Text style={styles.smallTitle}>
           {playlist[playlistCurrentIndex - 1]
@@ -371,7 +408,9 @@ const Home = ({navigation}: any) => {
                   </Text>
                 </ImageBackground>
               </TouchableOpacity>
-              <TouchableOpacity style={{marginHorizontal: 5 * pt}}>
+              <TouchableOpacity
+                onPress={() => setModalVisible(true)}
+                style={{marginHorizontal: 5 * pt}}>
                 <ImageBackground
                   style={styles.rightIcon}
                   resizeMode="contain"
@@ -391,31 +430,41 @@ const Home = ({navigation}: any) => {
           <TouchableOpacity
             onPress={() => navigation.navigate('Playlist')}
             style={styles.lists}>
-            <View
-              style={{
-                height: 30 * pt,
-                width: '100%',
-                marginBottom: 10 * pt,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-              <Slider
-                // disabled={disable}
-                style={{width: '70%', height: 20}}
-                minimumValue={0}
-                maximumValue={100}
-                // value={77}
-                maximumTrackTintColor="#FFFFFF"
-                minimumTrackTintColor={'#FF5757'}
-                thumbImage={icon}
-                // onValueChange={_changeVolumn}
-                step={1}
-              />
-            </View>
             {_renderPlaylist()}
           </TouchableOpacity>
         </View>
       ) : null}
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}>
+        <TouchableOpacity
+          onPress={() => setModalVisible(false)}
+          style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            flex: 1,
+            backgroundColor: 'black',
+            opacity: 0.5,
+          }}>
+        </TouchableOpacity>
+          <View
+            style={{
+              backgroundColor: 'white',
+              height: 100 * pt,
+              width: 200 * pt,
+              position: 'absolute',
+              zIndex: 2,
+              alignSelf: 'center',
+              top: '65%',
+              borderRadius: 10*pt
+            }}>
+          </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -454,7 +503,7 @@ const styles = StyleSheet.create({
   },
   mainPanel: {
     width: '100%',
-    marginTop: 60 * pt,
+    marginTop: 50 * pt,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
@@ -482,13 +531,15 @@ const styles = StyleSheet.create({
     color: '#555',
     fontSize: 10 * pt,
     fontStyle: 'italic',
+    paddingTop: 10 * pt,
   },
   mainTitle: {
     color: 'white',
     fontSize: 16 * pt,
     fontWeight: 'bold',
     fontStyle: 'italic',
-    marginVertical: 10 * pt,
+    marginHorizontal: 10 * pt,
+    paddingTop: 10 * pt,
   },
   lists: {
     alignItems: 'center',
@@ -499,6 +550,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20 * pt,
+    paddingTop: 10 * pt,
   },
   SafeAreaView: {
     flex: 1,
@@ -555,12 +607,12 @@ const styles = StyleSheet.create({
     marginTop: 10 * pt,
   },
   panel: {
-    height: 250 * pt,
+    height: 150 * pt,
     width: '100%',
     bottom: 0,
     borderWidth: 3 * pt,
-    borderTopLeftRadius: 30 * pt,
-    borderTopRightRadius: 30 * pt,
+    borderTopLeftRadius: 20 * pt,
+    borderTopRightRadius: 20 * pt,
     borderColor: 'white',
     borderBottomColor: 'black',
   },

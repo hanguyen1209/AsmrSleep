@@ -3,6 +3,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {Category, Home, Playlists} from '../screens';
 import AddPlaylistModal from '../components/AddPlaylistModal';
+import { Platform } from 'react-native';
 const Stack = createNativeStackNavigator();
 
 const Dark = {
@@ -34,7 +35,7 @@ const AppNavigationContainer = () => {
             options={{
               animation: 'fade_from_bottom',
               presentation: 'modal',
-              contentStyle: {backgroundColor: 'transparent'}
+              contentStyle: {backgroundColor: Platform.OS == 'ios' ? 'transparent' : '#000'}
             }}
             name="Modal"
             component={AddPlaylistModal}></Stack.Screen>

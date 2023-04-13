@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {FlatList} from 'react-native';
 import {
   Image,
@@ -12,7 +12,7 @@ import {
 import {useDispatch, useSelector} from 'react-redux';
 import * as images from '../assets';
 import {Playlist, SoundBar, Toggle} from '../components';
-import {App} from '../store/App';
+import {App, setInitial} from '../store/App';
 import {
   Playlist as PlaylistType,
   updateIsLoop,
@@ -20,7 +20,7 @@ import {
 } from '../store/Playlist';
 import {pt} from '../Utils';
 
-const Playlists = ({navigation}: any) => {
+const Playlists = ({navigation, route}: any) => {
   const dispatch = useDispatch();
   const _renderPlaylist = ({item}: any) => {
     return <SoundBar {...item} />;
@@ -36,11 +36,17 @@ const Playlists = ({navigation}: any) => {
 
   const _changeLooping = () => {
     dispatch(updateIsLoop({id: playlistCurrentIndex}));
+    dispatch(setInitial())
   };
 
   const _changeMixing = () => {
     dispatch(updateIsMix({id: playlistCurrentIndex}));
+    dispatch(setInitial())
   };
+
+  useEffect(() => {
+    if (!playlist.length) navigation.goBack();
+  }, [playlist.length]);
 
   const _share = () => {};
 
@@ -94,38 +100,40 @@ const Playlists = ({navigation}: any) => {
           renderItem={_renderPlaylist}
         />
       </View>
-      <View style={styles.bottom}>
-        <View style={styles.toggleBox}>
-          <Toggle
-            isEnabled={playlist[playlistCurrentIndex].isLoop}
-            onValueChange={_changeLooping}></Toggle>
-          <Text style={styles.toggleTitle}>Loop</Text>
+      {playlist.length ? (
+        <View style={styles.bottom}>
+          <View style={styles.toggleBox}>
+            <Toggle
+              isEnabled={playlist[playlistCurrentIndex]?.isLoop}
+              onValueChange={_changeLooping}></Toggle>
+            <Text style={styles.toggleTitle}>Loop</Text>
+          </View>
+          <View
+            style={{
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <TouchableOpacity style={styles.share} onPress={_share}>
+              <Image
+                style={{
+                  resizeMode: 'contain',
+                  width: 30 * pt,
+                  height: 30 * pt,
+                }}
+                resizeMode="contain"
+                source={images.shareIcon}
+              />
+              <Text style={styles.shareTitle}>Share {`\n`} your playlist</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.toggleBox}>
+            <Toggle
+              isEnabled={playlist[playlistCurrentIndex]?.isMix}
+              onValueChange={_changeMixing}></Toggle>
+            <Text style={styles.toggleTitle}>Mix</Text>
+          </View>
         </View>
-        <View
-          style={{
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
-          <TouchableOpacity style={styles.share} onPress={_share}>
-            <Image
-              style={{
-                resizeMode: 'contain',
-                width: 30 * pt,
-                height: 30 * pt,
-              }}
-              resizeMode="contain"
-              source={images.shareIcon}
-            />
-            <Text style={styles.shareTitle}>Share {`\n`} your playlist</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.toggleBox}>
-          <Toggle
-            isEnabled={playlist[playlistCurrentIndex].isMix}
-            onValueChange={_changeMixing}></Toggle>
-          <Text style={styles.toggleTitle}>Mix</Text>
-        </View>
-      </View>
+      ) : null}
     </SafeAreaView>
   );
 };
