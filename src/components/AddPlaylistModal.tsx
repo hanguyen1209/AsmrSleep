@@ -13,6 +13,7 @@ import {Sound} from '../store/Sounds';
 import {pt} from '../Utils';
 import PlaylistForSelect from './PlaylistForSelect';
 import {Playlist} from '../store/Playlist';
+import {changeCurrentPlaylistIndex, setInitial} from '../store/App';
 
 interface PlaylistForSelect {
   id: Number;
@@ -32,15 +33,21 @@ const AddPlaylistModal = ({navigation, route}: any) => {
         id: route.params.sound.id,
         online: true,
         volumn: 80,
-        name: route.params.sound.name
+        name: route.params.sound.name,
       };
       const data = {
         id,
         sound,
       };
       dispatch(addToOldPlaylist(data));
+      dispatch(setInitial());
     } else if (name.current && id === null) {
-      const data: {isMix: Boolean,isLoop: Boolean,name: String; sounds: Array<Sound>} = {
+      const data: {
+        isMix: Boolean;
+        isLoop: Boolean;
+        name: String;
+        sounds: Array<Sound>;
+      } = {
         name: name.current,
         isMix: false,
         isLoop: false,
@@ -50,11 +57,12 @@ const AddPlaylistModal = ({navigation, route}: any) => {
             id: route.params.sound.id,
             online: true,
             volumn: 80,
-            name: route.params.sound.name
+            name: route.params.sound.name,
           },
         ],
       };
       dispatch(addNewPlaylist(data));
+      dispatch(setInitial());
     } else return;
     navigation.goBack();
   };
@@ -88,7 +96,7 @@ const AddPlaylistModal = ({navigation, route}: any) => {
               style={{
                 backgroundColor: 'white',
                 flex: 1,
-                height: 30 * pt,
+                height: 40 * pt,
                 borderRadius: 5 * pt,
                 justifyContent: 'center',
                 margin: 30 * pt,

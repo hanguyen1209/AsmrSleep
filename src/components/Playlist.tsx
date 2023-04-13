@@ -1,15 +1,9 @@
 import React from 'react';
 import {pt} from '../Utils';
-import {
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
+import {Image, StyleSheet, Text, TouchableOpacity, Alert} from 'react-native';
 import * as images from '../assets';
-import {useDispatch} from 'react-redux';
-import {changeCurrentPlaylistIndex} from '../store/App';
+import {useDispatch, useSelector} from 'react-redux';
+import {App, changeCurrentPlaylistIndex, setInitial} from '../store/App';
 import {deletePlaylist} from '../store/Playlist';
 
 interface Playlist {
@@ -19,11 +13,18 @@ interface Playlist {
 }
 
 const Playlist = ({isPlaying, text, id}: Playlist) => {
+  const playlist = useSelector(
+    (store: {playlist: Array<Playlist>}) => store.playlist,
+  );
   const dispatch = useDispatch();
 
   const choosePlaylist = (id: number) => {
     return () => dispatch(changeCurrentPlaylistIndex({id: id}));
   };
+
+  const playlistCurrentIndex = useSelector(
+    (state: {app: App}) => state.app.playlistCurrentIndex,
+  );
 
   const deleteAPlaylist = () =>
     Alert.alert(`Do you want to delete ${text} ?`, '', [
@@ -35,6 +36,12 @@ const Playlist = ({isPlaying, text, id}: Playlist) => {
         text: 'OK',
         onPress: () => {
           dispatch(deletePlaylist({id: id}));
+          dispatch(
+            changeCurrentPlaylistIndex({
+              id: playlistCurrentIndex > 0 ? playlistCurrentIndex - 1 : 0,
+            }),
+          );
+          dispatch(setInitial());
         },
       },
     ]);
