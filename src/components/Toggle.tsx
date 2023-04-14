@@ -3,7 +3,7 @@ import {StyleSheet} from 'react-native';
 import {View, Switch} from 'react-native';
 
 const Toggle = (props: any) => (
-  <View style={styles.container}>
+  <View style={{...styles.container, ...props.style}}>
     <Switch
       trackColor={{true: '#FF5757', false: 'white'}}
       thumbColor={!props.isEnabled ? 'white' : 'white'}
