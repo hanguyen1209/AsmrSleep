@@ -15,10 +15,10 @@ import {
   PlaylistCard,
   IntensityCard,
   TypeCard,
+  SliderSmooth,
 } from '../components';
 import {fixUrlSound, pt} from '../Utils';
 import {PLAYLIST, INTENSITY, TYPE, GENRE} from '../config';
-import Icon from 'react-native-vector-icons/FontAwesome';
 import {useDispatch, useSelector} from 'react-redux';
 import {Playlist} from '../store/Playlist';
 import {App, changeCurrentPlaylistIndex, setInitial} from '../store/App';
@@ -34,12 +34,11 @@ const Home = ({navigation}: any) => {
   const soundPlaying = useRef(0);
   const [playerStatus, setPlayerStatus] = useState('waiting');
 
-  const [playerBar, setPlayerBarStatus] = useState({
-    mute: false,
-    speed: 1,
-    timer: -1,
-    fading: false,
-  });
+  const timer = useRef(0);
+  const volumnPercent = useRef(1);
+  const percent = useRef(0);
+  const isFadingVolumn = useRef(false);
+  const [intervalValue, setIntervalValue] = useState(-1);
 
   const playlist = useSelector(
     (store: {playlist: Array<Playlist>}) => store.playlist,
@@ -60,8 +59,6 @@ const Home = ({navigation}: any) => {
   const _toScreen = (name: String, props: any) => () =>
     navigation.navigate(name, props);
 
-  const [icon, setIcon] = useState();
-
   const [soundId, setId] = useState(-1);
 
   const init = useSelector((state: {app: App}) => state.app.init);
@@ -69,6 +66,10 @@ const Home = ({navigation}: any) => {
   const [isNext, setIsNext] = useState(false);
 
   const [modalVisible, setModalVisible] = useState(false);
+
+  const [isMuted, setMute] = useState(false);
+
+  const [speed, setSpeed] = useState(1);
 
   const initDataSounds = () => {
     if (playlist.length == 0) return;
@@ -83,13 +84,26 @@ const Home = ({navigation}: any) => {
       const options = {...playbackOptions};
       const sound = new Player(fixUrlSound(item.url), options).prepare(err => {
         if (!err) setPlayerStatus(isNext ? 'playing' : 'canPlay');
+        else return;
       });
+      sound.speed = speed;
       if (isLoop && isMix) {
         sound.looping = true;
       }
+      if (isMuted) sound.volume = 0;
+
       listSounds.current.push(sound);
     });
   };
+
+  useEffect(() => {
+    listSounds.current.forEach(sound =>
+      isMuted
+        ? (sound.volume = 0)
+        : (sound.volume =
+            isFadingVolumn && timer.current > 0 ? 1 - percent.current : 0.8),
+    );
+  }, [isMuted]);
 
   useEffect(() => {
     if (init) {
@@ -162,6 +176,55 @@ const Home = ({navigation}: any) => {
   }, [soundId]);
 
   useEffect(() => {
+    const interval = setInterval(() => {
+      if (intervalValue) {
+        timer.current -= 1;
+        setIntervalValue(timer.current);
+
+        if (timer.current === 0) {
+          dispatch(setInitial());
+          return;
+        }
+        if (timer.current) {
+          listSounds.current.forEach(sound => {
+            if (isMuted) {
+              return;
+            }
+            if (isFadingVolumn.current) {
+              sound.volume = 1 - percent.current;
+            } else {
+              sound.volume = 1;
+            }
+            console.log(sound.volume, 'VOL');
+          });
+          percent.current += 1 / volumnPercent.current;
+        }
+      }
+    }, 5 * 1000);
+    if (intervalValue < 1) clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      console.log('clear Interval!', timer.current);
+    };
+  }, [intervalValue]);
+
+  useEffect(() => {
+    if (timer.current) {
+      setIntervalValue(timer.current);
+    }
+  }, [timer.current]);
+
+  useEffect(() => {
+    if (volumnPercent.current > 1) {
+      percent.current = 1 / volumnPercent.current;
+    }
+  }, [volumnPercent.current]);
+
+  useEffect(() => {
+    listSounds.current.forEach(sound => (sound.speed = speed));
+  }, [speed]);
+
+  useEffect(() => {
     api.get(`sounds/recommended`).then(res => {
       const {data} = res;
       if (data) {
@@ -183,10 +246,6 @@ const Home = ({navigation}: any) => {
     }
   }, [search]);
 
-  useEffect(() => {
-    Icon.getImageSource('circle', 15, 'white').then(setIcon);
-  }, []);
-
   const _previous = () => {
     if (playlist[playlistCurrentIndex - 1]) {
       dispatch(changeCurrentPlaylistIndex({id: playlistCurrentIndex - 1}));
@@ -201,6 +260,10 @@ const Home = ({navigation}: any) => {
       dispatch(changeCurrentPlaylistIndex({id: 0}));
       if (playlist.length == 1) dispatch(setInitial());
     }
+  };
+
+  const _setSpeed = () => {
+    setSpeed(c => (c < 2 ? c + 0.25 : 0.25));
   };
 
   const _renderPlaylist = () => {
@@ -345,9 +408,9 @@ const Home = ({navigation}: any) => {
               }}
             />
             <View style={styles.col1}>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => setMute(c => !c)}>
                 <ImageBackground
-                  style={styles.volumn}
+                  style={[styles.volumn, {opacity: isMuted ? 0.5 : 1}]}
                   resizeMode="contain"
                   source={images.volumn}
                 />
@@ -393,18 +456,20 @@ const Home = ({navigation}: any) => {
               </TouchableOpacity>
             </View>
             <View style={styles.col3}>
-              <TouchableOpacity style={{marginHorizontal: 5 * pt}}>
+              <TouchableOpacity
+                onPress={_setSpeed}
+                style={{marginHorizontal: 5 * pt}}>
                 <ImageBackground
                   style={styles.rightIcon}
                   resizeMode="contain"
                   source={images.speed}>
                   <Text
                     style={{
-                      fontSize: 9 * pt,
+                      fontSize: speed == 1 ? 11 * pt : 9 * pt,
                       fontWeight: 'bold',
                       fontStyle: 'italic',
                     }}>
-                    1.5x
+                    {speed}x
                   </Text>
                 </ImageBackground>
               </TouchableOpacity>
@@ -421,7 +486,7 @@ const Home = ({navigation}: any) => {
                       fontWeight: 'bold',
                       fontStyle: 'italic',
                     }}>
-                    25m
+                    {timer.current > 0 ? `${timer.current}m` : 'OFF'}
                   </Text>
                 </ImageBackground>
               </TouchableOpacity>
@@ -450,20 +515,25 @@ const Home = ({navigation}: any) => {
             flex: 1,
             backgroundColor: 'black',
             opacity: 0.5,
+          }}></TouchableOpacity>
+        <View
+          style={{
+            backgroundColor: 'gray',
+            height: '18%',
+            width: '80%',
+            position: 'absolute',
+            zIndex: 2,
+            alignSelf: 'center',
+            top: '50%',
+            borderRadius: 10 * pt,
+            justifyContent: 'center',
           }}>
-        </TouchableOpacity>
-          <View
-            style={{
-              backgroundColor: 'white',
-              height: 100 * pt,
-              width: 200 * pt,
-              position: 'absolute',
-              zIndex: 2,
-              alignSelf: 'center',
-              top: '65%',
-              borderRadius: 10*pt
-            }}>
-          </View>
+          <SliderSmooth
+            timer={timer}
+            isFadingVolumn={isFadingVolumn}
+            volumnPercent={volumnPercent}
+          />
+        </View>
       </Modal>
     </SafeAreaView>
   );

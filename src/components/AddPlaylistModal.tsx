@@ -108,6 +108,7 @@ const AddPlaylistModal = ({navigation, route}: any) => {
                 }}
                 style={{fontSize: 15 * pt, paddingHorizontal: 10 * pt}}
                 placeholder="Give it a name then click add button"
+                placeholderTextColor={'gray'}
               />
             </View>
             <TouchableOpacity
