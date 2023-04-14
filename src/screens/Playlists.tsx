@@ -22,8 +22,8 @@ import {pt} from '../Utils';
 
 const Playlists = ({navigation, route}: any) => {
   const dispatch = useDispatch();
-  const _renderPlaylist = ({item}: any) => {
-    return <SoundBar {...item} />;
+  const _renderPlaylist = ({item, index}: any) => {
+    return <SoundBar {...item} soundId={index}/>;
   };
 
   const playlist = useSelector(

@@ -80,13 +80,14 @@ const Home = ({navigation}: any) => {
     setPlayerStatus('waiting');
     const isLoop = playlist[playlistCurrentIndex]?.isLoop;
     const isMix = playlist[playlistCurrentIndex]?.isMix;
-    playlist[playlistCurrentIndex].sounds.forEach((item, index) => {
+    playlist[playlistCurrentIndex]?.sounds.forEach((item, index) => {
       const options = {...playbackOptions};
       const sound = new Player(fixUrlSound(item.url), options).prepare(err => {
         if (!err) setPlayerStatus(isNext ? 'playing' : 'canPlay');
         else return;
       });
       sound.speed = speed;
+      sound.volume = item.volume;
       if (isLoop && isMix) {
         sound.looping = true;
       }
@@ -101,7 +102,7 @@ const Home = ({navigation}: any) => {
       isMuted
         ? (sound.volume = 0)
         : (sound.volume =
-            isFadingVolumn && timer.current > 0 ? 1 - percent.current : 0.8),
+            isFadingVolumn && timer.current > 0 ? (1 - percent.current) * sound.volume : sound.volume),
     );
   }, [isMuted]);
 
@@ -191,11 +192,11 @@ const Home = ({navigation}: any) => {
               return;
             }
             if (isFadingVolumn.current) {
-              sound.volume = 1 - percent.current;
-            } else {
-              sound.volume = 1;
-            }
-            console.log(sound.volume, 'VOL');
+              sound.volume = (1 - percent.current) * sound.volume;
+            } 
+            // else {
+            //   sound.volume = 1;
+            // }
           });
           percent.current += 1 / volumnPercent.current;
         }
@@ -204,7 +205,6 @@ const Home = ({navigation}: any) => {
     if (intervalValue < 1) clearInterval(interval);
     return () => {
       clearInterval(interval);
-      console.log('clear Interval!', timer.current);
     };
   }, [intervalValue]);
 
@@ -410,9 +410,9 @@ const Home = ({navigation}: any) => {
             <View style={styles.col1}>
               <TouchableOpacity onPress={() => setMute(c => !c)}>
                 <ImageBackground
-                  style={[styles.volumn, {opacity: isMuted ? 0.5 : 1}]}
+                  style={[styles.volume, {opacity: isMuted ? 0.5 : 1}]}
                   resizeMode="contain"
-                  source={images.volumn}
+                  source={images.volume}
                 />
               </TouchableOpacity>
             </View>
@@ -564,7 +564,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
   },
-  volumn: {
+  volume: {
     width: 30 * pt,
     height: 30 * pt,
     resizeMode: 'contain',

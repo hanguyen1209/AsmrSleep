@@ -50,7 +50,7 @@ const SliderSmooth = (props: any) => {
             props.isFadingVolumn.current = !props.isFadingVolumn.current;
           }}></Toggle>
         <Text style={[styles.text, {paddingLeft: 10 * pt}]}>
-          Fading volumn {isFade ? 'ON' : 'OFF'}
+          Fading volume {isFade ? 'ON' : 'OFF'}
         </Text>
       </View>
     </View>

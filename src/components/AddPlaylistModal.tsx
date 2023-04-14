@@ -32,7 +32,7 @@ const AddPlaylistModal = ({navigation, route}: any) => {
         url: route.params.sound.url,
         id: route.params.sound.id,
         online: true,
-        volumn: 80,
+        volume: 1,
         name: route.params.sound.name,
       };
       const data = {
@@ -56,7 +56,7 @@ const AddPlaylistModal = ({navigation, route}: any) => {
             url: route.params.sound.url,
             id: route.params.sound.id,
             online: true,
-            volumn: 80,
+            volume: 1,
             name: route.params.sound.name,
           },
         ],

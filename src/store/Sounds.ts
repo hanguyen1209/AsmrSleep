@@ -3,7 +3,7 @@ export interface Sound {
   url: String;
   online: Boolean;
   id: Number | null;
-  volumn: Number;
+  volume: number;
   name: String
 }
 const initialState: any = [];

@@ -5,10 +5,25 @@ import * as images from '../assets';
 import Slider from '@react-native-community/slider';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {Player} from '@react-native-community/audio-toolkit';
+import {useDispatch, useSelector} from 'react-redux';
+import {App, changeCurrentPlaylistIndex, setInitial} from '../store/App';
+import {
+  adjustVolumnSound,
+  deletePlaylist,
+  deleteSoundInPlaylist,
+  Playlist as PlaylistType,
+} from '../store/Playlist';
 
 const SoundBar = (props: any) => {
   const [icon, setIcon] = useState();
-  const [isPlaying, setPlaying] = useState(false);
+  const dispatch = useDispatch();
+  const playlist = useSelector(
+    (store: {playlist: Array<PlaylistType>}) => store.playlist,
+  );
+
+  const playlistCurrentIndex = useSelector(
+    (state: {app: App}) => state.app.playlistCurrentIndex,
+  );
   const playbackOptions = {
     continuesToPlayInBackground: true,
     mixWithOthers: true,
@@ -18,20 +33,6 @@ const SoundBar = (props: any) => {
     new Player(fixUrlSound(props.url), playbackOptions),
   ).current;
   const [disable, setDisable] = useState(true);
-  const _playSound = () => {
-    if (!sound.canPlay) return;
-    if (isPlaying) {
-      sound.pause();
-      setPlaying(false);
-    } else {
-      sound.play();
-      setPlaying(true);
-    }
-  };
-
-  const _changeVolumn = (value: any) => {
-    sound.volume = parseInt(value);
-  };
 
   useEffect(() => {
     Icon.getImageSource('circle', 15, 'white').then(setIcon);
@@ -40,7 +41,7 @@ const SoundBar = (props: any) => {
   useEffect(() => {
     sound.prepare(err => {
       if (!err) {
-        sound.volume = parseInt(props.volumn);
+        sound.volume = parseInt(props.volume);
         // sound.looping = true;
         setDisable(false);
       } else {
@@ -50,9 +51,28 @@ const SoundBar = (props: any) => {
     return () => sound.destroy();
   }, []);
 
+  const _removeSound = () => {
+    if (playlist[playlistCurrentIndex].sounds.length == 1) {
+      dispatch(deletePlaylist({id: playlistCurrentIndex}));
+      dispatch(
+        changeCurrentPlaylistIndex({
+          id: playlistCurrentIndex > 0 ? playlistCurrentIndex - 1 : 0,
+        }),
+      );
+    } else {
+      dispatch(
+        deleteSoundInPlaylist({
+          id: playlistCurrentIndex,
+          soundId: props.soundId,
+        }),
+      );
+    }
+    dispatch(setInitial());
+  };
+
   return (
     <View style={styles.container}>
-      <TouchableOpacity>
+      <TouchableOpacity onPress={() => _removeSound()}>
         <Image
           style={styles.remove}
           source={images.closeWhiteRound}
@@ -68,7 +88,7 @@ const SoundBar = (props: any) => {
             <Image
               style={{width: 20 * pt, height: 20 * pt, opacity: 0.7}}
               resizeMode="contain"
-              source={images.volumn}
+              source={images.volume}
             />
           </View>
         </View>
@@ -77,15 +97,21 @@ const SoundBar = (props: any) => {
             disabled={disable}
             style={{maxHeight: 20 * pt}}
             minimumValue={0}
-            maximumValue={100}
-            value={props.volumn}
+            maximumValue={1}
+            value={props.volume}
             maximumTrackTintColor="#FFFFFF"
             minimumTrackTintColor={'#FF5757'}
             thumbImage={icon}
-            onSlidingComplete={() => {
-              console.log('ok');
+            onSlidingComplete={value => {
+              dispatch(
+                adjustVolumnSound({
+                  id: playlistCurrentIndex,
+                  soundId: props.soundId,
+                  volume: value,
+                }),
+              );
+              dispatch(setInitial());
             }}
-            onValueChange={_changeVolumn}
           />
           <Text style={styles.text2}>ID: {props.id}</Text>
         </View>
