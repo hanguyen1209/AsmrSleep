@@ -48,14 +48,20 @@ const PlaylistSlice = createSlice({
     },
     deleteSoundInPlaylist: (state, {payload}) => {
       const temp: Playlist = Object.assign({}, state[payload.id]);
-      temp.sounds.splice(payload.soundId, 1)
+      temp.sounds.splice(payload.soundId, 1);
       state.splice(payload.id, 1, temp);
     },
     adjustVolumnSound: (state, {payload}) => {
       const temp: Playlist = Object.assign({}, state[payload.id]);
-      temp.sounds[payload.soundId].volume = payload.volume
+      temp.sounds[payload.soundId].volume = payload.volume;
       state.splice(payload.id, 1, temp);
-    }
+    },
+    updateSoundDownloaded: (state, {payload}) => {
+      const temp: Playlist = Object.assign({}, state[payload.id]);
+      temp.sounds[payload.soundId].url = payload.url;
+      temp.sounds[payload.soundId].online = false;
+      state.splice(payload.id, 1, temp);
+    },
   },
 });
 export const {
@@ -65,6 +71,7 @@ export const {
   updateIsMix,
   updateIsLoop,
   deleteSoundInPlaylist,
-  adjustVolumnSound
+  adjustVolumnSound,
+  updateSoundDownloaded
 } = PlaylistSlice.actions;
 export default PlaylistSlice.reducer;

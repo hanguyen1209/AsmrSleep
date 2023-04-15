@@ -1,8 +1,13 @@
 #import "AppDelegate.h"
-
+#import <RNFSManager.h>
 #import <React/RCTBundleURLProvider.h>
 
 @implementation AppDelegate
+
+- (void)application:(UIApplication *)application handleEventsForBackgroundURLSession:(NSString *)identifier completionHandler:(void (^)())completionHandler
+{
+  [RNFSManager setCompletionHandlerForIdentifier:identifier completionHandler:completionHandler];
+}
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
@@ -32,5 +37,6 @@
 {
   return true;
 }
+
 
 @end

@@ -1,5 +1,12 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {
+  ActivityIndicator,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {fixUrlSound, pt} from '../Utils';
 import * as images from '../assets';
 import Slider from '@react-native-community/slider';
@@ -12,11 +19,22 @@ import {
   deletePlaylist,
   deleteSoundInPlaylist,
   Playlist as PlaylistType,
+  updateSoundDownloaded,
 } from '../store/Playlist';
+import {Sound, addSound, resetSound} from '../store/Sounds';
+
+type DownloadResult = {
+  jobId: number; 
+  statusCode: number; 
+  bytesWritten: number; 
+};
 
 const SoundBar = (props: any) => {
   const [icon, setIcon] = useState();
   const dispatch = useDispatch();
+  const RNFS = require('react-native-fs');
+  const filePath = RNFS.CachesDirectoryPath + '/' + 'id' + props.id + '.mp3';
+
   const playlist = useSelector(
     (store: {playlist: Array<PlaylistType>}) => store.playlist,
   );
@@ -24,6 +42,9 @@ const SoundBar = (props: any) => {
   const playlistCurrentIndex = useSelector(
     (state: {app: App}) => state.app.playlistCurrentIndex,
   );
+
+  const listSound: any = useSelector((state: {sounds: Sound}) => state.sounds);
+
   const playbackOptions = {
     continuesToPlayInBackground: true,
     mixWithOthers: true,
@@ -32,7 +53,81 @@ const SoundBar = (props: any) => {
   const sound = useRef(
     new Player(fixUrlSound(props.url), playbackOptions),
   ).current;
+
   const [disable, setDisable] = useState(true);
+  const [downloadLoading, setDownloadLoading] = useState(false);
+  const [downloaded, setDownloaded] = useState(!props.online);
+
+  const checkIfFileAvailable = async () => {
+    return await RNFS.exists(filePath);
+  };
+
+  const checkIfSoundStored = () => {
+    return listSound[props.url] ? true : false;
+  };
+
+  const downloadFileDone = () => {
+    const data = {
+      soundId: props.id,
+      url: filePath,
+      name: props.name,
+      volumn: props.volume,
+      _url: props.url,
+      soundIDinList: props.soundId,
+    };
+    dispatch(addSound({data}));
+    setDownloadLoading(false);
+  };
+
+  const startDownload = async () => {
+    const downloadOptions = {
+      fromUrl: fixUrlSound(props.url),
+      toFile: filePath,
+      connectionTimeout: 180000,
+      readTimeout: 180000,
+      cacheable: false,
+      background: false,
+      backgroundTimeout: 180000,
+      progressInterval: 100,
+    };
+    const download = RNFS.downloadFile(downloadOptions);
+    download.promise
+      .then((res: DownloadResult) => {
+        if (res.statusCode == 200 && res.bytesWritten) {
+          downloadFileDone();
+        }
+      })
+      .catch((err: any) => {
+        setDownloadLoading(false);
+      });
+  };
+
+  const updateUrlAndOnlineStatus = () => {
+    dispatch(
+      updateSoundDownloaded({
+        soundId: props.soundId,
+        id: playlistCurrentIndex,
+        url: filePath,
+      }),
+    );
+    setDownloaded(true);
+  };
+
+  const _downloadFile = async () => {
+    setDownloadLoading(true);
+    if (await checkIfFileAvailable()) {
+      if (!checkIfSoundStored()) {
+        downloadFileDone();
+      }
+    } else {
+      startDownload();
+    }
+    updateUrlAndOnlineStatus();
+  };
+
+  useEffect(() => {
+    dispatch(resetSound());
+  }, []);
 
   useEffect(() => {
     Icon.getImageSource('circle', 15, 'white').then(setIcon);
@@ -40,16 +135,16 @@ const SoundBar = (props: any) => {
 
   useEffect(() => {
     sound.prepare(err => {
+      console.log(err, 'errorrrr');
       if (!err) {
         sound.volume = parseInt(props.volume);
-        // sound.looping = true;
         setDisable(false);
       } else {
         setDisable(true);
       }
     });
     return () => sound.destroy();
-  }, []);
+  }, [downloaded]);
 
   const _removeSound = () => {
     if (playlist[playlistCurrentIndex].sounds.length == 1) {
@@ -116,14 +211,27 @@ const SoundBar = (props: any) => {
           <Text style={styles.text2}>ID: {props.id}</Text>
         </View>
       </View>
-
-      <TouchableOpacity disabled={disable}>
-        <Image
-          style={styles.download}
-          source={disable ? images.downloadGray : images.downloadWhite}
-          resizeMode="contain"
-        />
-      </TouchableOpacity>
+      {!downloadLoading ? (
+        downloaded ? (
+          <View>
+            <Image
+              style={styles.download}
+              source={images.doneGray}
+              resizeMode="contain"
+            />
+          </View>
+        ) : (
+          <TouchableOpacity onPress={_downloadFile} disabled={disable}>
+            <Image
+              style={styles.download}
+              source={disable ? images.downloadGray : images.downloadWhite}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        )
+      ) : (
+        <ActivityIndicator style={styles.download}></ActivityIndicator>
+      )}
     </View>
   );
 };

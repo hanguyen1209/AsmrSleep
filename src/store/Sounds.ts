@@ -1,16 +1,24 @@
 import {createSlice} from '@reduxjs/toolkit';
 export interface Sound {
-  url: String;
+  url: string;
   online: Boolean;
   id: Number | null;
   volume: number;
-  name: String
+  name: String;
 }
-const initialState: any = [];
+const initialState = {};
 
 const SoundSlice = createSlice({
   name: 'sounds',
   initialState: initialState,
-  reducers: {},
+  reducers: {
+    addSound: (state, {payload}) => {
+      return {...state, [payload.data._url]: payload.data};
+    },
+    resetSound: () => {
+      return {};
+    },
+  },
 });
+export const {addSound, resetSound} = SoundSlice.actions;
 export default SoundSlice.reducer;

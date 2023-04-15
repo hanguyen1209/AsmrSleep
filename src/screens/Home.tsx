@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   ImageBackground,
   Modal,
@@ -102,7 +102,9 @@ const Home = ({navigation}: any) => {
       isMuted
         ? (sound.volume = 0)
         : (sound.volume =
-            isFadingVolumn && timer.current > 0 ? (1 - percent.current) * sound.volume : sound.volume),
+            isFadingVolumn && timer.current > 0
+              ? (1 - percent.current) * sound.volume
+              : sound.volume),
     );
   }, [isMuted]);
 
@@ -193,10 +195,7 @@ const Home = ({navigation}: any) => {
             }
             if (isFadingVolumn.current) {
               sound.volume = (1 - percent.current) * sound.volume;
-            } 
-            // else {
-            //   sound.volume = 1;
-            // }
+            }
           });
           percent.current += 1 / volumnPercent.current;
         }
@@ -232,6 +231,14 @@ const Home = ({navigation}: any) => {
       }
     });
   }, []);
+
+  const _renderRecomended = useCallback(
+    () =>
+      recommended.map((item: any, index) => {
+        return <CardSound key={`-top-${index}`} props={item} />;
+      }),
+    [recommended.length],
+  );
 
   useEffect(() => {
     if (search && search.length > 1) {
@@ -338,9 +345,7 @@ const Home = ({navigation}: any) => {
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}
           horizontal={true}>
-          {recommended.map((item: any, index) => {
-            return <CardSound key={`-top-${index}`} props={item} />;
-          })}
+          {_renderRecomended()}
         </ScrollView>
         <Category title="playlist" />
         <View style={styles.playlistBox}>
