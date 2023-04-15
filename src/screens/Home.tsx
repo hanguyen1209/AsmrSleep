@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
+  Alert,
   ImageBackground,
   Modal,
   TextInput,
@@ -18,7 +19,7 @@ import {
   SliderSmooth,
 } from '../components';
 import {fixUrlSound, pt} from '../Utils';
-import {PLAYLIST, INTENSITY, TYPE, GENRE} from '../config';
+import {PLAYLIST, INTENSITY, TYPE, GENRE, API_URL} from '../config';
 import {useDispatch, useSelector} from 'react-redux';
 import {Playlist} from '../store/Playlist';
 import {App, changeCurrentPlaylistIndex, setInitial} from '../store/App';
