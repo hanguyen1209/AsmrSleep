@@ -13,10 +13,10 @@ const CardSound = ({props}: any) => {
   const [soundIsPlaying, setSoundPlaying] = useState(false);
   const [disable, setDisable] = useState(true);
   const playbackOptions = {
-    continuesToPlayInBackground: false,
+    continuesToPlayInBackground: true,
     mixWithOthers: false,
     autoDestroy: false,
-    loop: false,
+    loop: true,
   };
   const sound = useRef(
     new Player(fixUrlSound(props.url), playbackOptions),

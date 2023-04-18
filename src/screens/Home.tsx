@@ -243,12 +243,15 @@ const Home = ({navigation}: any) => {
 
   useEffect(() => {
     if (search && search.length > 1) {
-      api.get(`sounds/name/${search}`).then(res => {
-        const {data} = res;
-        if (data) {
-          setDataSearch(data.data);
-        }
-      });
+      api
+        .get(`sounds/name/${search}`)
+        .then(res => {
+          const {data} = res;
+          if (data) {
+            setDataSearch(data.data);
+          }
+        })
+        .catch(err => console.log(err.message, 'ERROR_API'));
     } else {
       setDataSearch([]);
     }

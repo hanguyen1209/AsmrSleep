@@ -1,4 +1,4 @@
-export const API_URL = 'http://3.1.64.184:8080/api/v1';
+export const API_URL = 'https://gappvn.com:9443/api/v1';
 
 export const PLAYLIST = ['relax', 'sleep', 'meditation'];
 export const INTENSITY = [
