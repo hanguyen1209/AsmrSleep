@@ -22,11 +22,13 @@ import {
   updateSoundDownloaded,
 } from '../store/Playlist';
 import {Sound, addSound, resetSound} from '../store/Sounds';
+import {default as api} from '../apis';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type DownloadResult = {
-  jobId: number; 
-  statusCode: number; 
-  bytesWritten: number; 
+  jobId: number;
+  statusCode: number;
+  bytesWritten: number;
 };
 
 const SoundBar = (props: any) => {
@@ -92,8 +94,16 @@ const SoundBar = (props: any) => {
     };
     const download = RNFS.downloadFile(downloadOptions);
     download.promise
-      .then((res: DownloadResult) => {
+      .then(async (res: DownloadResult) => {
         if (res.statusCode == 200 && res.bytesWritten) {
+          const data = {
+            soundId: props._id,
+            id: await AsyncStorage.getItem('uid'),
+          };
+          api
+            .post('/sounds/download', data)
+            .then()
+            .catch(err => console.log(err.message, 'ERRRR1'));
           downloadFileDone();
         }
       })
@@ -135,7 +145,6 @@ const SoundBar = (props: any) => {
 
   useEffect(() => {
     sound.prepare(err => {
-      console.log(err, 'errorrrr');
       if (!err) {
         sound.volume = parseInt(props.volume);
         setDisable(false);

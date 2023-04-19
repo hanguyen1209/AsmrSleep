@@ -5,6 +5,7 @@ export interface Sound {
   id: Number | null;
   volume: number;
   name: String;
+  _id: String
 }
 const initialState = {};
 

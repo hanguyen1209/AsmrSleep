@@ -1,6 +1,5 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
-  Alert,
   ImageBackground,
   Modal,
   TextInput,
@@ -19,11 +18,13 @@ import {
   SliderSmooth,
 } from '../components';
 import {fixUrlSound, pt} from '../Utils';
-import {PLAYLIST, INTENSITY, TYPE, GENRE, API_URL} from '../config';
+import {PLAYLIST, INTENSITY, TYPE, GENRE} from '../config';
 import {useDispatch, useSelector} from 'react-redux';
 import {Playlist} from '../store/Playlist';
 import {App, changeCurrentPlaylistIndex, setInitial} from '../store/App';
 import {Player} from '@react-native-community/audio-toolkit';
+import {getUniqueId} from 'react-native-device-info';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Home = ({navigation}: any) => {
   const [dataSearch, setDataSearch] = useState([]);
@@ -72,6 +73,8 @@ const Home = ({navigation}: any) => {
 
   const [speed, setSpeed] = useState(1);
 
+  const [deviceID, setDeviceID] = useState('');
+
   const initDataSounds = () => {
     if (playlist.length == 0) return;
     setIsNext(false);
@@ -97,6 +100,29 @@ const Home = ({navigation}: any) => {
       listSounds.current.push(sound);
     });
   };
+
+  useEffect(() => {
+    (async () => {
+      let _id = (await AsyncStorage.getItem('deviceID')) || '';
+      if (!_id) {
+        const id = await getUniqueId();
+        if (id) {
+          _id = id;
+          await api
+            .post('/users', {deviceId: id})
+            .then(async res => {
+              const {data} = res.data;
+              if (data.id) {
+                await AsyncStorage.setItem('uid', data.id);
+                await AsyncStorage.setItem('deviceID', id);
+              }
+            })
+            .catch((err: any) => console.log(err.message, 'ERRORRR'));
+        }
+      }
+      setDeviceID(_id);
+    })();
+  }, []);
 
   useEffect(() => {
     listSounds.current.forEach(sound =>
@@ -402,6 +428,11 @@ const Home = ({navigation}: any) => {
               <Text style={styles.text}>{item}</Text>
             </TouchableOpacity>
           ))}
+        </View>
+        <View style={{width: '100%', paddingBottom: 20 * pt}}>
+          <Text style={{color: 'gray', textAlign: 'center', fontSize: 9 * pt}}>
+            Device ID: {deviceID}
+          </Text>
         </View>
       </ScrollView>
       {playlist.length ? (
