@@ -1,6 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Image,
   StyleSheet,
   Text,
@@ -55,11 +56,10 @@ const SoundBar = (props: any) => {
   const sound = useRef(
     new Player(fixUrlSound(props.url), playbackOptions),
   ).current;
-
-  const [disable, setDisable] = useState(true);
+  const isPreparing = useRef(false);
+  const [disable, setDisable] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
-  const [downloaded, setDownloaded] = useState(!props.online);
-
+  const [downloaded, setDownloaded] = useState(false);
   const checkIfFileAvailable = async () => {
     return await RNFS.exists(filePath);
   };
@@ -73,7 +73,7 @@ const SoundBar = (props: any) => {
       soundId: props.id,
       url: filePath,
       name: props.name,
-      volumn: props.volume,
+      volume: props.volume || 1,
       _url: props.url,
       soundIDinList: props.soundId,
     };
@@ -102,13 +102,20 @@ const SoundBar = (props: any) => {
           };
           api
             .post('/sounds/download', data)
-            .then()
-            .catch(err => console.log(err.message, 'ERRRR1'));
-          downloadFileDone();
+            .then(() => {
+              downloadFileDone();
+              updateUrlAndOnlineStatus();
+            })
+            .catch(err => {
+              setDownloadLoading(false);
+              setDownloaded(false);
+              console.log(err.message, 'ERRRR1');
+            });
         }
       })
       .catch((err: any) => {
         setDownloadLoading(false);
+        setDownloaded(false);
       });
   };
 
@@ -120,6 +127,7 @@ const SoundBar = (props: any) => {
         url: filePath,
       }),
     );
+    setDownloadLoading(false);
     setDownloaded(true);
   };
 
@@ -129,31 +137,36 @@ const SoundBar = (props: any) => {
       if (!checkIfSoundStored()) {
         downloadFileDone();
       }
+      updateUrlAndOnlineStatus();
     } else {
       startDownload();
     }
-    updateUrlAndOnlineStatus();
   };
 
   useEffect(() => {
-    dispatch(resetSound());
-  }, []);
+    setDownloaded(!props.online);
+  }, [props.online]);
 
   useEffect(() => {
     Icon.getImageSource('circle', 15, 'white').then(setIcon);
   }, []);
 
   useEffect(() => {
-    sound.prepare(err => {
-      if (!err) {
-        sound.volume = parseInt(props.volume);
-        setDisable(false);
-      } else {
-        setDisable(true);
-      }
-    });
-    return () => sound.destroy();
-  }, [downloaded]);
+    // if (isPreparing.current == true) return;
+    // isPreparing.current = true;
+    // sound.prepare(err => {
+    //   if (!err) {
+    //     sound.volume = parseInt(props.volume);
+    //     setDisable(false);
+    //   } else {
+    //     setDisable(true);
+    //   }
+    //   isPreparing.current = false;
+    // });
+    return () => {
+      sound.destroy();
+    };
+  }, [downloaded, sound]);
 
   const _removeSound = () => {
     if (playlist[playlistCurrentIndex].sounds.length == 1) {

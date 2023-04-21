@@ -23,7 +23,7 @@ import {pt} from '../Utils';
 const Playlists = ({navigation, route}: any) => {
   const dispatch = useDispatch();
   const _renderPlaylist = ({item, index}: any) => {
-    return <SoundBar {...item} soundId={index}/>;
+    return <SoundBar {...item} soundId={index} />;
   };
 
   const playlist = useSelector(
@@ -36,12 +36,12 @@ const Playlists = ({navigation, route}: any) => {
 
   const _changeLooping = () => {
     dispatch(updateIsLoop({id: playlistCurrentIndex}));
-    dispatch(setInitial())
+    dispatch(setInitial());
   };
 
   const _changeMixing = () => {
     dispatch(updateIsMix({id: playlistCurrentIndex}));
-    dispatch(setInitial())
+    dispatch(setInitial());
   };
 
   useEffect(() => {

@@ -13,9 +13,6 @@ interface Playlist {
 }
 
 const Playlist = ({isPlaying, text, id}: Playlist) => {
-  const playlist = useSelector(
-    (store: {playlist: Array<Playlist>}) => store.playlist,
-  );
   const dispatch = useDispatch();
 
   const choosePlaylist = (id: number) => {

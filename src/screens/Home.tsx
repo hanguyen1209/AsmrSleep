@@ -1,7 +1,9 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
+  Alert,
   ImageBackground,
   Modal,
+  RefreshControl,
   TextInput,
   TouchableOpacity,
 } from 'react-native';
@@ -17,7 +19,7 @@ import {
   TypeCard,
   SliderSmooth,
 } from '../components';
-import {fixUrlSound, pt} from '../Utils';
+import {fixUrlSound, pt, refactorSoundData} from '../Utils';
 import {PLAYLIST, INTENSITY, TYPE, GENRE} from '../config';
 import {useDispatch, useSelector} from 'react-redux';
 import {Playlist} from '../store/Playlist';
@@ -25,6 +27,7 @@ import {App, changeCurrentPlaylistIndex, setInitial} from '../store/App';
 import {Player} from '@react-native-community/audio-toolkit';
 import {getUniqueId} from 'react-native-device-info';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {Sound} from '../store/Sounds';
 
 const Home = ({navigation}: any) => {
   const [dataSearch, setDataSearch] = useState([]);
@@ -49,9 +52,10 @@ const Home = ({navigation}: any) => {
   const playlistCurrentIndex = useSelector(
     (state: {app: App}) => state.app.playlistCurrentIndex,
   );
+
   const playbackOptions = {
     continuesToPlayInBackground: true,
-    mixWithOthers: true,
+    // mixWithOthers: true,
     autoDestroy: false,
   };
 
@@ -75,7 +79,9 @@ const Home = ({navigation}: any) => {
 
   const [deviceID, setDeviceID] = useState('');
 
-  const initDataSounds = () => {
+  const [refreshing, setRefreshing] = React.useState(true);
+
+  const initDataSounds = useCallback(() => {
     if (playlist.length == 0) return;
     setIsNext(false);
     listSounds.current = [];
@@ -84,6 +90,7 @@ const Home = ({navigation}: any) => {
     setPlayerStatus('waiting');
     const isLoop = playlist[playlistCurrentIndex]?.isLoop;
     const isMix = playlist[playlistCurrentIndex]?.isMix;
+
     playlist[playlistCurrentIndex]?.sounds.forEach((item, index) => {
       const options = {...playbackOptions};
       const sound = new Player(fixUrlSound(item.url), options).prepare(err => {
@@ -99,7 +106,7 @@ const Home = ({navigation}: any) => {
 
       listSounds.current.push(sound);
     });
-  };
+  }, [init]);
 
   useEffect(() => {
     (async () => {
@@ -251,13 +258,21 @@ const Home = ({navigation}: any) => {
   }, [speed]);
 
   useEffect(() => {
-    api.get(`sounds/recommended`).then(res => {
-      const {data} = res;
-      if (data) {
-        setDataRecommended(data.data);
-      }
-    });
-  }, []);
+    if (refreshing) {
+      api
+        .get(`sounds/recommended`)
+        .then(res => {
+          const {data} = res;
+          if (data) {
+            setDataRecommended(data.data);
+          }
+          setRefreshing(!refreshing);
+        })
+        .catch(err => {
+          setRefreshing(!refreshing);
+        });
+    }
+  }, [refreshing]);
 
   const _renderRecomended = useCallback(
     () =>
@@ -266,6 +281,10 @@ const Home = ({navigation}: any) => {
       }),
     [recommended.length],
   );
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+  }, []);
 
   useEffect(() => {
     if (search && search.length > 1) {
@@ -303,6 +322,12 @@ const Home = ({navigation}: any) => {
     setSpeed(c => (c < 2 ? c + 0.25 : 0.25));
   };
 
+  const _onSelectPlaylist = (type: String) => {
+    return () => {
+      navigation.navigate('PlaylistDetail', {type});
+    };
+  };
+
   const _renderPlaylist = () => {
     if (!playlist.length) return null;
     return (
@@ -334,6 +359,9 @@ const Home = ({navigation}: any) => {
   return (
     <SafeAreaView style={styles.SafeAreaView}>
       <ScrollView
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
@@ -380,7 +408,10 @@ const Home = ({navigation}: any) => {
         <Category title="playlist" />
         <View style={styles.playlistBox}>
           {PLAYLIST.map((item, index) => (
-            <TouchableOpacity style={{flex: 1}} key={`--${index}`}>
+            <TouchableOpacity
+              onPress={_onSelectPlaylist(item)}
+              style={{flex: 1}}
+              key={`--${index}`}>
               <PlaylistCard type={item} name={item} />
             </TouchableOpacity>
           ))}

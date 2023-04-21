@@ -7,35 +7,18 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
-import {pt, refactorSoundData} from '../Utils';
+import {pt} from '../Utils';
 import * as images from '../assets';
-import {CardSound} from '../components';
 import api from '../apis';
-import {Category as CategoryName} from '../components';
-import { useSelector } from 'react-redux';
-import { Sound } from '../store/Sounds';
+import {Category as CategoryName, PlaylistBox} from '../components';
 
-const Category = ({navigation, route}: any) => {
+const PlaylistDetail = ({navigation, route}: any) => {
   const [data, setData] = useState([]);
   useEffect(() => {
-    let url = 'sounds/';
-    switch (route.params.category) {
-      case 'intense':
-        url += `intense/${route.params.categoryId}`;
-        break;
-      case 'type':
-        url += `type/${route.params.categoryId}`;
-        break;
-      case 'genre':
-        url += `genre/${route.params.categoryName.toLowerCase()}`;
-        break;
-      default:
-        break;
-    }
+    const url = 'playlists/' + route.params.type;
     api.get(url).then(({data}) => {
       if (data.data) {
-        const _data = data.data
-        setData(_data);
+        setData(data.data);
       }
     });
   }, []);
@@ -50,17 +33,19 @@ const Category = ({navigation, route}: any) => {
           />
         </TouchableOpacity>
       </View>
-      <CategoryName title={route.params.categoryName} />
+      <CategoryName title={route.params.type} />
       <ScrollView
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}>
-        <View style={styles.listSound}>
+        <View style={styles.playlists}>
           {data.length
-            ? data.map((card, index) => (
-                <View key={index} style={styles.card}>
-                  <CardSound props={card} />
-                </View>
-              ))
+            ? data.map((card: Object, index) => {
+                return (
+                  <View key={index} style={styles.card}>
+                    <PlaylistBox {...card} navigation={navigation} />
+                  </View>
+                );
+              })
             : null}
         </View>
       </ScrollView>
@@ -80,13 +65,15 @@ const styles = StyleSheet.create({
   backTouch: {
     paddingRight: 20 * pt,
   },
-  listSound: {
-    flexWrap: 'wrap',
+  playlists: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   card: {
-    width: '50%',
+    width: '75%',
+    paddingTop: 35 * pt,
   },
 });
-export default Category;
+export default PlaylistDetail;

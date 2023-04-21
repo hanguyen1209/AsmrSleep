@@ -30,7 +30,9 @@ const PlaylistSlice = createSlice({
     addToOldPlaylist: (state, {payload}) => {
       if (!payload) return;
       const temp: any = Object.assign({}, state[payload.id]);
-      temp.sounds.push(payload.sound);
+      payload.sounds.forEach((item: Sound) => {
+        temp.sounds.push(item);
+      });
       state.splice(payload.id, 1, temp);
     },
     deletePlaylist: (state, {payload}) => {

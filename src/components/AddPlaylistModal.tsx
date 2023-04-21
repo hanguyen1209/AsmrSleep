@@ -1,4 +1,4 @@
-import React, {useContext, useRef, useState} from 'react';
+import React, {useRef, useState} from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {Sound} from '../store/Sounds';
 import {pt} from '../Utils';
 import PlaylistForSelect from './PlaylistForSelect';
 import {Playlist} from '../store/Playlist';
-import {changeCurrentPlaylistIndex, setInitial} from '../store/App';
+import {setInitial} from '../store/App';
 
 interface PlaylistForSelect {
   id: Number;
@@ -28,17 +28,9 @@ const AddPlaylistModal = ({navigation, route}: any) => {
   const playlist = useSelector((state: any) => state.playlist);
   const _addToPlaylist = () => {
     if (id !== null) {
-      const sound = {
-        url: route.params.sound.url,
-        id: route.params.sound.id,
-        online: true,
-        volume: 1,
-        name: route.params.sound.name,
-        _id: route.params.sound._id
-      };
       const data = {
         id,
-        sound,
+        sounds: route.params.sounds,
       };
       dispatch(addToOldPlaylist(data));
       dispatch(setInitial());
@@ -52,16 +44,7 @@ const AddPlaylistModal = ({navigation, route}: any) => {
         name: name.current,
         isMix: false,
         isLoop: false,
-        sounds: [
-          {
-            url: route.params.sound.url,
-            id: route.params.sound.id,
-            online: true,
-            volume: 1,
-            name: route.params.sound.name,
-            _id: route.params.sound._id
-          },
-        ],
+        sounds: [...route.params.sounds],
       };
       dispatch(addNewPlaylist(data));
       dispatch(setInitial());

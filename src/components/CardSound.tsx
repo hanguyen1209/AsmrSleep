@@ -1,6 +1,13 @@
 import React, {useContext, useEffect, useRef, useState} from 'react';
 import {fixUrlSound, pt} from '../Utils';
-import {StyleSheet, View, Text, TouchableOpacity, Image} from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+} from 'react-native';
 import * as images from '../assets';
 import {Player} from '@react-native-community/audio-toolkit';
 import {NavigationContext} from '@react-navigation/native';
@@ -10,8 +17,7 @@ const CardSound = ({props}: any) => {
 
   const [intenseIcon, setIntenseIcon] = useState(null);
   const [typeIcon, setTypeIcon] = useState(null);
-  const [soundIsPlaying, setSoundPlaying] = useState(false);
-  const [disable, setDisable] = useState(true);
+  const [soundState, setSoundState] = useState('stop');
   const playbackOptions = {
     continuesToPlayInBackground: true,
     mixWithOthers: false,
@@ -23,27 +29,32 @@ const CardSound = ({props}: any) => {
   ).current;
 
   const _playSound = () => {
-    if (!sound.canPlay) return;
-    if (sound.isPlaying) {
-      sound.stop();
-      setSoundPlaying(false);
-    } else if (sound.isStopped) {
-      sound.play();
-      setSoundPlaying(true);
+    if (sound.canPlay || sound.isPrepared) {
+      if (sound.isPlaying) {
+        sound.stop();
+        setSoundState('stop');
+      } else {
+        sound.play();
+        setSoundState('playing');
+      }
+    } else {
+      setSoundState('preparing');
+      sound.prepare(err => {
+        if (!err) {
+          sound.play();
+          setSoundState('playing');
+        } else {
+          setSoundState('stop');
+        }
+      });
     }
   };
 
   useEffect(() => {
-    sound.prepare(err => {
-      if (!err) {
-        setDisable(false);
-        sound.looping = true;
-      } else {
-        setDisable(true);
-      }
-    });
-    return () => sound.destroy();
-  }, []);
+    return () => {
+      sound.destroy();
+    };
+  },[sound]);
 
   useEffect(() => {
     switch (parseInt(props.intense)) {
@@ -117,18 +128,21 @@ const CardSound = ({props}: any) => {
           ) : null}
         </View>
       </View>
-      <TouchableOpacity
-        disabled={disable}
-        style={[styles.play, {opacity: disable ? 0.5 : 1}]}
-        onPress={_playSound}>
-        <Image
-          style={styles.button}
-          source={soundIsPlaying ? images.pauseWhiteRound : images.playCard}
-        />
-      </TouchableOpacity>
+      {soundState == 'preparing' ? (
+        <ActivityIndicator style={styles.play} />
+      ) : (
+        <TouchableOpacity style={[styles.play]} onPress={_playSound}>
+          <Image
+            style={styles.button}
+            source={soundState !== 'stop' ? images.pause : images.playCard}
+          />
+        </TouchableOpacity>
+      )}
       <TouchableOpacity
         onPress={() => {
-          navigation?.navigate('Modal', {sound: props});
+          navigation?.navigate('Modal', {
+            sounds: [props],
+          });
         }}
         style={styles.add}>
         <Image style={styles.button} source={images.addToPlaylist} />

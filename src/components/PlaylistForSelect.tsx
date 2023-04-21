@@ -4,7 +4,7 @@ import {pt} from '../Utils';
 interface PlaylistForSelectProps {
   isChosed: Boolean;
   name: String;
-  totalSound: Number;
+  totalSound: number;
 }
 const PlaylistForSelect = (props: PlaylistForSelectProps) => {
   const {isChosed, name, totalSound} = props;

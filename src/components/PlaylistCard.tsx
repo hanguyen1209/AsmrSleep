@@ -47,9 +47,9 @@ const styles = StyleSheet.create({
   },
   text: {
     color: '#FF5757',
-    textTransform: 'uppercase',
+    textTransform: 'capitalize',
     fontSize: 14 * pt,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
   },
   icon: {
     width: 35 * pt,

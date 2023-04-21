@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
   },
   text: {
     color: '#FF5757',
-    textTransform: 'uppercase',
+    textTransform: 'capitalize',
     fontSize: 12 * pt,
     fontWeight: 'bold',
     textAlign: 'center'
