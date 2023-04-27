@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "272517454924",
+    "project_id": "asmr-sleep-2023",
+    "storage_bucket": "asmr-sleep-2023.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:272517454924:android:213209fc9acc655a6ca8e9",
+        "android_client_info": {
+          "package_name": "com.asmrsleep"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "272517454924-7rshvkr147kcabvf6i1uoja1f205hi3s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.asmrsleep",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "272517454924-bn2228ngp5osfdld6890si1alniegagl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0EK_VxVd6svZLaOWIc8OAkbwophoZsbc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "272517454924-bn2228ngp5osfdld6890si1alniegagl.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "272517454924-fhjb7o9othoi5ukoes60gj6e8am718ni.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.gappvn.asmr-sleep"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

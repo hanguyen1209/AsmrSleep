@@ -1,7 +1,8 @@
 #import "AppDelegate.h"
 #import <RNFSManager.h>
 #import <React/RCTBundleURLProvider.h>
-
+#import <Firebase.h>
+#import <RNFBDynamicLinksAppDelegateInterceptor.h>
 @implementation AppDelegate
 
 - (void)application:(UIApplication *)application handleEventsForBackgroundURLSession:(NSString *)identifier completionHandler:(void (^)())completionHandler
@@ -11,7 +12,9 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-  self.moduleName = @"asmrSleep";
+  [RNFBDynamicLinksAppDelegateInterceptor sharedInstance];
+  [FIRApp configure];
+  self.moduleName = @"asmr sleep";
   // You can add your custom initial props in the dictionary below.
   // They will be passed down to the ViewController used by React Native.
   self.initialProps = @{};

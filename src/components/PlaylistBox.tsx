@@ -33,7 +33,7 @@ const PlaylistBox = (props: any) => {
   const [data, setData] = useState([]);
   const _renderItems = useMemo(() => {
     return data.map((item: any, index) => (
-      <View key={'--i+' + index} style={styles.itemBox}>
+      <View key={'--i+' + index + item.id} style={styles.itemBox}>
         <PlaylistSoundItem {...item} />
       </View>
     ));

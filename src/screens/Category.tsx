@@ -7,13 +7,11 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
-import {pt, refactorSoundData} from '../Utils';
+import {pt} from '../Utils';
 import * as images from '../assets';
 import {CardSound} from '../components';
 import api from '../apis';
 import {Category as CategoryName} from '../components';
-import { useSelector } from 'react-redux';
-import { Sound } from '../store/Sounds';
 
 const Category = ({navigation, route}: any) => {
   const [data, setData] = useState([]);

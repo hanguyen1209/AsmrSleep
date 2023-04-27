@@ -91,7 +91,7 @@ const AddPlaylistModal = ({navigation, route}: any) => {
                 onFocus={() => {
                   setChosedPlaylistId(null);
                 }}
-                style={{fontSize: 15 * pt, paddingHorizontal: 10 * pt}}
+                style={{fontSize: 15 * pt, paddingHorizontal: 10 * pt, color: 'black'}}
                 placeholder="Give it a name then click add button"
                 placeholderTextColor={'gray'}
               />

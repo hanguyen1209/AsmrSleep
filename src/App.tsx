@@ -1,16 +1,16 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import AppNavigationContainer from './navigators';
 import store from './store';
 import {Provider} from 'react-redux';
 import {PersistGate} from 'redux-persist/integration/react';
 import {persistStore} from 'redux-persist';
-
 export const AppContext = React.createContext({});
 
 interface Main {
   mainColor: String;
 }
-const App = () => {
+const App = ({navigation}: any) => {
+
   const value: Main = {
     mainColor: '#FF22DD',
   };

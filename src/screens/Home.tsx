@@ -19,6 +19,7 @@ import {
   TypeCard,
   SliderSmooth,
 } from '../components';
+import dynamicLinks from '@react-native-firebase/dynamic-links';
 import {fixUrlSound, pt, refactorSoundData} from '../Utils';
 import {PLAYLIST, INTENSITY, TYPE, GENRE} from '../config';
 import {useDispatch, useSelector} from 'react-redux';
@@ -27,7 +28,7 @@ import {App, changeCurrentPlaylistIndex, setInitial} from '../store/App';
 import {Player} from '@react-native-community/audio-toolkit';
 import {getUniqueId} from 'react-native-device-info';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {Sound} from '../store/Sounds';
+import _ from 'lodash';
 
 const Home = ({navigation}: any) => {
   const [dataSearch, setDataSearch] = useState([]);
@@ -80,6 +81,64 @@ const Home = ({navigation}: any) => {
   const [deviceID, setDeviceID] = useState('');
 
   const [refreshing, setRefreshing] = React.useState(true);
+
+  const showAlert = (decodedStr: String, navigation: any) => {
+    const soundIds = decodedStr.split(',').map((e: string) => parseInt(e));
+    if (soundIds.length)
+      Alert.alert(
+        `Do you want to copy a playlist contains ${soundIds.length} sound${
+          soundIds.length > 1 ? 's' : ''
+        } ?`,
+        '',
+        [
+          {
+            text: 'No',
+            style: 'cancel',
+          },
+          {
+            text: 'OK',
+            onPress: () => {
+              api
+                .get('sounds/ids/' + soundIds)
+                .then((res: any) => {
+                  const data = res.data.data;
+                  if (data)
+                    navigation?.navigate('Modal', {
+                      sounds: res.data.data,
+                    });
+                })
+                .catch((err: any) => console.log(err.message, 'ERRR DATATAA'));
+            },
+          },
+        ],
+      );
+  };
+
+  const handleDynamicLink = (link: any) => {
+    if (link?.url) {
+      const arr = link.url.split('#');
+      if (arr[0] === 'https://asmr-sleep.gappvn.com' && arr[1]) {
+        const Buffer = require('buffer').Buffer;
+        const decodedStr = Buffer.from(arr[1], 'base64').toString('ascii');
+        if (decodedStr) {
+          showAlert(decodedStr, navigation);
+        }
+      }
+    }
+  };
+
+  useEffect(() => {
+    const unsubscribe = dynamicLinks().onLink(handleDynamicLink);
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    dynamicLinks()
+      .getInitialLink()
+      .then((link: any) => {
+        handleDynamicLink(link);
+      });
+  }, []);
 
   const initDataSounds = useCallback(() => {
     if (playlist.length == 0) return;
@@ -274,7 +333,7 @@ const Home = ({navigation}: any) => {
     }
   }, [refreshing]);
 
-  const _renderRecomended = useCallback(
+  const _renderRecomended = useMemo(
     () =>
       recommended.map((item: any, index) => {
         return <CardSound key={`-top-${index}`} props={item} />;
@@ -327,6 +386,14 @@ const Home = ({navigation}: any) => {
       navigation.navigate('PlaylistDetail', {type});
     };
   };
+
+  const _renderSearchData = useMemo(
+    () =>
+      dataSearch.map((item: any, index) => {
+        return <CardSound key={`-search-${item._id}`} props={item} />;
+      }),
+    [JSON.stringify(dataSearch)],
+  );
 
   const _renderPlaylist = () => {
     if (!playlist.length) return null;
@@ -392,9 +459,7 @@ const Home = ({navigation}: any) => {
               showsHorizontalScrollIndicator={false}
               showsVerticalScrollIndicator={false}
               horizontal={true}>
-              {dataSearch.map((item: any, index) => {
-                return <CardSound key={`-search-${index}`} props={item} />;
-              })}
+              {_renderSearchData}
             </ScrollView>
           </View>
         ) : null}
@@ -403,7 +468,7 @@ const Home = ({navigation}: any) => {
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}
           horizontal={true}>
-          {_renderRecomended()}
+          {_renderRecomended}
         </ScrollView>
         <Category title="playlist" />
         <View style={styles.playlistBox}>

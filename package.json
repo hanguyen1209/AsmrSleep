@@ -1,5 +1,5 @@
 {
-  "name": "asmrSleep",
+  "name": "asmr.sleep",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -11,8 +11,12 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.18.1",
+    "@react-native-clipboard/clipboard": "^1.11.2",
     "@react-native-community/audio-toolkit": "^2.0.3",
     "@react-native-community/slider": "^4.4.2",
+    "@react-native-firebase/analytics": "^17.4.2",
+    "@react-native-firebase/app": "^17.4.2",
+    "@react-native-firebase/dynamic-links": "^17.4.2",
     "@react-navigation/native": "^6.1.6",
     "@react-navigation/native-stack": "^6.9.12",
     "@reduxjs/toolkit": "^1.9.3",
@@ -37,6 +41,7 @@
     "@redux-devtools/core": "^3.13.1",
     "@tsconfig/react-native": "^2.0.2",
     "@types/jest": "^29.2.1",
+    "@types/lodash": "^4.14.194",
     "@types/react": "^18.0.24",
     "@types/react-native-vector-icons": "^6.4.13",
     "@types/react-test-renderer": "^18.0.0",

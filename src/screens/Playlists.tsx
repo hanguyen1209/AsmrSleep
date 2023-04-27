@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {FlatList} from 'react-native';
+import {ActivityIndicator, Alert, FlatList, Share} from 'react-native';
 import {
   Image,
   SafeAreaView,
@@ -19,12 +19,17 @@ import {
   updateIsMix,
 } from '../store/Playlist';
 import {pt} from '../Utils';
+import dynamicLinks from '@react-native-firebase/dynamic-links';
+import Clipboard from '@react-native-clipboard/clipboard';
+import {LIST_MESSAGE_SHARE} from '../config';
 
 const Playlists = ({navigation, route}: any) => {
   const dispatch = useDispatch();
   const _renderPlaylist = ({item, index}: any) => {
     return <SoundBar {...item} soundId={index} />;
   };
+
+  const [shareLoading, setShareLoading] = useState(false);
 
   const playlist = useSelector(
     (store: {playlist: Array<PlaylistType>}) => store.playlist,
@@ -48,7 +53,71 @@ const Playlists = ({navigation, route}: any) => {
     if (!playlist.length) navigation.goBack();
   }, [playlist.length]);
 
-  const _share = () => {};
+  const onShare = async (link: String) => {
+    try {
+      const random = Math.floor(Math.random() * 10);
+      const result = await Share.share({
+        message: `${link}\n${LIST_MESSAGE_SHARE[random]}`,
+      });
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          // shared with activity type of result.activityType
+        } else {
+          // shared
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // dismissed
+      }
+    } catch (error: any) {
+      Alert.alert(error.message);
+    }
+  };
+
+  const generateLink = async function buildLink(ids: String) {
+    const link = await dynamicLinks().buildShortLink({
+      link: 'https://asmr-sleep.gappvn.com#' + ids,
+      domainUriPrefix: 'https://asmr-sleep.gappvn.com',
+      ios: {
+        bundleId: 'com.gappvn.asmr-sleep',
+        appStoreId: '1664664165',
+        fallbackUrl:
+          'https://apps.apple.com/vn/app/cover-letter-templates/id1664664165',
+      },
+      android: {
+        packageName: 'com.asmrsleep',
+        fallbackUrl:
+          'https://play.google.com/store/apps/details?id=com.CoverLetter',
+      },
+      navigation: {
+        forcedRedirectEnabled: true,
+      },
+    });
+    return link;
+  };
+  const _share = async () => {
+    setShareLoading(true);
+    if (playlist[playlistCurrentIndex]?.sounds) {
+      const arr: (Number | null)[] = [];
+      playlist[playlistCurrentIndex]?.sounds.forEach((value, index) => {
+        arr.push(value.id);
+      });
+      if (arr) {
+        setTimeout(() => {
+          setShareLoading(false);
+        }, 1500);
+        const ids = arr.join(',');
+        const Buffer = require('buffer').Buffer;
+        const encodedStr = new Buffer(ids).toString('base64');
+        if (encodedStr) {
+          const link = await generateLink(encodedStr);
+          if (link) {
+            Clipboard.setString(link);
+            onShare(link);
+          }
+        }
+      }
+    }
+  };
 
   return (
     <SafeAreaView style={styles.SafeAreaView}>
@@ -113,18 +182,24 @@ const Playlists = ({navigation, route}: any) => {
               justifyContent: 'center',
               alignItems: 'center',
             }}>
-            <TouchableOpacity style={styles.share} onPress={_share}>
-              <Image
-                style={{
-                  resizeMode: 'contain',
-                  width: 30 * pt,
-                  height: 30 * pt,
-                }}
-                resizeMode="contain"
-                source={images.shareIcon}
-              />
-              <Text style={styles.shareTitle}>Share {`\n`} your playlist</Text>
-            </TouchableOpacity>
+            {shareLoading ? (
+              <ActivityIndicator style={styles.share} />
+            ) : (
+              <TouchableOpacity style={styles.share} onPress={_share}>
+                <Image
+                  style={{
+                    resizeMode: 'contain',
+                    width: 30 * pt,
+                    height: 30 * pt,
+                  }}
+                  resizeMode="contain"
+                  source={images.shareIcon}
+                />
+                <Text style={styles.shareTitle}>
+                  Share {`\n`} your playlist
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
           <View style={styles.toggleBox}>
             <Toggle
