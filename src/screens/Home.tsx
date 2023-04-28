@@ -293,7 +293,7 @@ const Home = ({navigation}: any) => {
           percent.current += 1 / volumnPercent.current;
         }
       }
-    }, 5 * 1000);
+    }, timer.current * 60 * 1000);
     if (intervalValue < 1) clearInterval(interval);
     return () => {
       clearInterval(interval);
