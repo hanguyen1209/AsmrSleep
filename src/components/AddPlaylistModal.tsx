@@ -42,8 +42,8 @@ const AddPlaylistModal = ({navigation, route}: any) => {
         sounds: Array<Sound>;
       } = {
         name: name.current,
-        isMix: false,
-        isLoop: false,
+        isMix: true,
+        isLoop: true,
         sounds: [...route.params.sounds],
       };
       dispatch(addNewPlaylist(data));
@@ -68,7 +68,8 @@ const AddPlaylistModal = ({navigation, route}: any) => {
           width: '100%',
           backgroundColor: '#151515',
           alignSelf: 'center',
-          borderRadius: 30 * pt,
+          borderTopLeftRadius: 30 * pt,
+          borderTopRightRadius: 30 * pt,
         }}>
         <View style={{justifyContent: 'flex-end'}}>
           <View
@@ -91,7 +92,11 @@ const AddPlaylistModal = ({navigation, route}: any) => {
                 onFocus={() => {
                   setChosedPlaylistId(null);
                 }}
-                style={{fontSize: 15 * pt, paddingHorizontal: 10 * pt, color: 'black'}}
+                style={{
+                  fontSize: 15 * pt,
+                  paddingHorizontal: 10 * pt,
+                  color: 'black',
+                }}
                 placeholder="Give it a name then click add button"
                 placeholderTextColor={'gray'}
               />

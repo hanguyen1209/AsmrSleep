@@ -73,7 +73,7 @@ const SoundBar = (props: any) => {
       soundId: props.id,
       url: filePath,
       name: props.name,
-      volume: props.volume || 1,
+      volume: props.volume || .5,
       _url: props.url,
       soundIDinList: props.soundId,
     };

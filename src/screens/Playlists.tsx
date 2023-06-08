@@ -131,7 +131,7 @@ const Playlists = ({navigation, route}: any) => {
         </TouchableOpacity>
         <View style={styles.centerView}></View>
         <View style={styles.recordAndBrowser}>
-          <TouchableOpacity>
+          {/* <TouchableOpacity>
             <Image
               style={{height: 35 * pt, width: 35 * pt}}
               source={images.browser}
@@ -144,7 +144,7 @@ const Playlists = ({navigation, route}: any) => {
               source={images.record}
               resizeMode="contain"
             />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </View>
       <ScrollView

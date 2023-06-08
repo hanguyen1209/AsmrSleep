@@ -1,8 +1,10 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
+  ActivityIndicator,
   Alert,
   ImageBackground,
   Modal,
+  Platform,
   RefreshControl,
   TextInput,
   TouchableOpacity,
@@ -29,6 +31,8 @@ import {Player} from '@react-native-community/audio-toolkit';
 import {getUniqueId} from 'react-native-device-info';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import _ from 'lodash';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import CheckBox from '@react-native-community/checkbox';
 
 const Home = ({navigation}: any) => {
   const [dataSearch, setDataSearch] = useState([]);
@@ -45,7 +49,7 @@ const Home = ({navigation}: any) => {
   const percent = useRef(0);
   const isFadingVolumn = useRef(false);
   const [intervalValue, setIntervalValue] = useState(-1);
-
+  const [toggleCheckBox, setToggleCheckBox] = useState(false);
   const playlist = useSelector(
     (store: {playlist: Array<Playlist>}) => store.playlist,
   );
@@ -77,6 +81,8 @@ const Home = ({navigation}: any) => {
   const [isMuted, setMute] = useState(false);
 
   const [speed, setSpeed] = useState(1);
+
+  const [isShowPolicy, setShowPolicy] = useState(false);
 
   const [deviceID, setDeviceID] = useState('');
 
@@ -114,6 +120,17 @@ const Home = ({navigation}: any) => {
       );
   };
 
+  const showPromtPolicy = async () => {
+    const agreedPolicy = await AsyncStorage.getItem('agreedPolicy');
+    if (!agreedPolicy) {
+      setShowPolicy(true);
+    }
+  };
+
+  useEffect(() => {
+    showPromtPolicy();
+  }, []);
+
   const handleDynamicLink = (link: any) => {
     if (link?.url) {
       const arr = link.url.split('#');
@@ -143,18 +160,19 @@ const Home = ({navigation}: any) => {
   const initDataSounds = useCallback(() => {
     if (playlist.length == 0) return;
     setIsNext(false);
-    listSounds.current = [];
     setId(-1);
     soundPlaying.current = 0;
-    setPlayerStatus('waiting');
     const isLoop = playlist[playlistCurrentIndex]?.isLoop;
     const isMix = playlist[playlistCurrentIndex]?.isMix;
-
+    listSounds.current = [];
     playlist[playlistCurrentIndex]?.sounds.forEach((item, index) => {
       const options = {...playbackOptions};
       const sound = new Player(fixUrlSound(item.url), options).prepare(err => {
         if (!err) setPlayerStatus(isNext ? 'playing' : 'canPlay');
-        else return;
+        else {
+          console.log(sound, 'ERROR! - ' + err.message);
+          return;
+        }
       });
       sound.speed = speed;
       sound.volume = item.volume;
@@ -203,9 +221,13 @@ const Home = ({navigation}: any) => {
 
   useEffect(() => {
     if (init) {
+      setPlayerStatus('waiting');
       initDataSounds();
       return () => {
-        listSounds.current.forEach(p => p.destroy());
+        listSounds.current.forEach(p => {
+          p.stop();
+          p.destroy();
+        });
       };
     }
     return;
@@ -403,6 +425,7 @@ const Home = ({navigation}: any) => {
           alignItems: 'center',
           justifyContent: 'center',
           flexDirection: 'row',
+          marginTop: 10 * pt,
         }}>
         <Text style={styles.smallTitle}>
           {playlist[playlistCurrentIndex - 1]
@@ -425,6 +448,89 @@ const Home = ({navigation}: any) => {
 
   return (
     <SafeAreaView style={styles.SafeAreaView}>
+      {isShowPolicy ? (
+        <View
+          style={{
+            flex: 1,
+            zIndex: 2,
+            height: '100%',
+            position: 'absolute',
+            width: '100%',
+          }}>
+          <View
+            style={{
+              position: 'absolute',
+              width: '96%',
+              backgroundColor: 'white',
+              borderRadius: 10 * pt,
+              padding: 15 * pt,
+              alignSelf: 'center',
+              top: '10%',
+            }}>
+            <Text
+              style={{fontSize: 16 * pt, color: 'black', fontWeight: 'bold'}}>
+              Consent for Data Collection{`\n`}
+            </Text>
+            <Text
+              style={{fontSize: 12 * pt, color: 'black', fontStyle: 'italic'}}>
+              By downloading, installing, or using asmr sleep, you agree to be
+              bound by any alterations, amendments, additions, or modifications
+              to this policy. At asmr sleep, we value your privacy and data
+              security. {`\n\n`}
+              We collect the IDFV number for iOS devices and the Android ID for
+              Android devices solely for the purpose of calculating the number
+              of user favorites for sounds displayed in our most recommended
+              sound section.{`\n\n`} We do not collect any personally
+              identifiable information (PII) associated with these device
+              identifiers. This data collection occurs only with your consent
+              and is securely stored on our servers. We retain this data as long
+              as necessary to calculate the number of user favorites and for
+              internal statistical analysis.{`\n\n`} We do not share this data
+              with any third parties, and it is not used for any other purposes.
+              By using asmr sleep, you implicitly consent to the collection and
+              utilization of your IDFV number for iOS devices or Android ID for
+              Android devices as described above.{`\n\n`} You have the right to
+              withdraw your consent at any time by disabling the relevant
+              permissions in your device settings. {`\n\n`} However, please note
+              that disabling these permissions may impact the functionality of
+              our application, including the accurate display of recommended
+              sounds.{`\n\n`}
+              If you have any questions or concerns regarding our data
+              collection practices, please refer to our privacy policy or
+              contact our support team.
+            </Text>
+            <View
+              style={{
+                paddingVertical: 10 * pt,
+                flex: 1,
+                flexDirection: 'row',
+                // justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <CheckBox
+                style={{
+                  backgroundColor: Platform.OS == 'android' ? 'gray' : 'white',
+                }}
+                value={toggleCheckBox}
+                onValueChange={newValue => setToggleCheckBox(newValue)}
+              />
+              <Text style={{color: 'black', flex: 1}}> I agree.</Text>
+              <TouchableOpacity
+                disabled={toggleCheckBox ? false : true}
+                style={{backgroundColor: toggleCheckBox ? '#ff5757' : 'gray'}}
+                onPress={async () => {
+                  await AsyncStorage.setItem(
+                    'agreedPolicy',
+                    JSON.stringify(true),
+                  );
+                  setShowPolicy(false);
+                }}>
+                <Text style={{padding: 8 * pt, color: 'white'}}>Done</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      ) : null}
       <ScrollView
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -446,6 +552,11 @@ const Home = ({navigation}: any) => {
               placeholder="Search sounds by ID or name ..."
               onChangeText={_onChangeText}
             />
+          </View>
+          <View>
+            <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
+              <Icon name="bars" color={'white'} size={30 * pt} />
+            </TouchableOpacity>
           </View>
         </View>
         {dataSearch.length && search.length > 1 ? (
@@ -560,29 +671,45 @@ const Home = ({navigation}: any) => {
                   source={images.previous}
                 />
               </TouchableOpacity>
-              <TouchableOpacity
-                disabled={playerStatus == 'waiting'}
-                onPress={() => {
-                  if (['stop', 'canPlay', 'pausing'].includes(playerStatus)) {
-                    setPlayerStatus('playing');
-                  } else {
-                    setPlayerStatus('pausing');
-                  }
-                }}
-                style={{
-                  marginHorizontal: 20 * pt,
-                  opacity: playerStatus == 'waiting' ? 0.5 : 1,
-                }}>
-                <ImageBackground
-                  style={styles.play}
-                  resizeMode="contain"
-                  source={
-                    ['stop', 'canPlay', 'pausing'].includes(playerStatus)
-                      ? images.playMusic
-                      : images.pauseWhiteRound
-                  }
+              {playerStatus == 'waiting' ? (
+                <ActivityIndicator
+                  color={'white'}
+                  style={[
+                    styles.play,
+                    {
+                      marginHorizontal: 20 * pt,
+                      backgroundColor: 'black',
+                      overflow: 'hidden',
+                      borderRadius: 30 * pt,
+                      borderColor: 'white',
+                      borderWidth: 3 * pt,
+                    },
+                  ]}
                 />
-              </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => {
+                    if (['stop', 'canPlay', 'pausing'].includes(playerStatus)) {
+                      setPlayerStatus('playing');
+                    } else {
+                      setPlayerStatus('pausing');
+                    }
+                  }}
+                  style={{
+                    marginHorizontal: 20 * pt,
+                    opacity: playerStatus == 'waiting' ? 0.5 : 1,
+                  }}>
+                  <ImageBackground
+                    style={styles.play}
+                    resizeMode="contain"
+                    source={
+                      ['stop', 'canPlay', 'pausing'].includes(playerStatus)
+                        ? images.playMusic
+                        : images.pauseWhiteRound
+                    }
+                  />
+                </TouchableOpacity>
+              )}
               <TouchableOpacity onPress={_next}>
                 <ImageBackground
                   style={styles.next}
@@ -745,7 +872,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontStyle: 'italic',
     marginHorizontal: 10 * pt,
-    paddingTop: 10 * pt,
+    paddingVertical: 5 * pt,
+    backgroundColor: '#FF5757',
+    borderRadius: 8 * pt,
+    overflow: 'hidden',
+    paddingHorizontal: 10 * pt,
   },
   lists: {
     alignItems: 'center',

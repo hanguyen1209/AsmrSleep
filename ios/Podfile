@@ -1,8 +1,11 @@
+$RNFirebaseAsStaticFramework = true
+$RNFirebaseAnalyticsWithoutAdIdSupport = true
+
 require_relative '../node_modules/react-native/scripts/react_native_pods'
 require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
 
 platform :ios, min_ios_version_supported
-prepare_react_native_project!
+# prepare_react_native_project!
 
 # If you are using a `react-native-flipper` your iOS build will fail when `NO_FLIPPER=1` is set.
 # because `react-native-flipper` depends on (FlipperKit,...) that will be excluded
@@ -20,10 +23,10 @@ prepare_react_native_project!
 #   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
 #   use_frameworks! :linkage => linkage.to_sym
 # end
-use_frameworks! :linkage => :static
 
 target 'asmr sleep' do
   config = use_native_modules!
+  use_frameworks!
   # Flags change depending on the env values.
   flags = get_default_flags()
  
@@ -38,7 +41,7 @@ target 'asmr sleep' do
     #
     # Note that if you have use_frameworks! enabled, Flipper will not work and
     # you should disable the next line.
-    # :flipper_configuration => flipper_config,
+    :flipper_configuration => FlipperConfiguration.disabled,
     # :flipper_configuration => FlipperConfiguration.enabled(['debug'], { 'Flipper' => '0.159.0' }),
 
     # An absolute path to your application root.
@@ -48,15 +51,5 @@ target 'asmr sleep' do
   target 'asmr sleepTests' do
     inherit! :complete
     # Pods for testing
-  end
-
-  post_install do |installer|
-    react_native_post_install(
-      installer,
-      # Set `mac_catalyst_enabled` to `true` in order to apply patches
-      # necessary for Mac Catalyst builds
-      :mac_catalyst_enabled => false
-    )
-    __apply_Xcode_12_5_M1_post_install_workaround(installer)
   end
 end

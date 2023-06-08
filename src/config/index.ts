@@ -28,6 +28,7 @@ export const GENRE = [
   'White noise',
   '3D sound',
   'Roleplay',
+  'Thunder'
 ];
 
 export const LIST_MESSAGE_SHARE = [

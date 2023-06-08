@@ -13,6 +13,7 @@
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		E7C6BF2C06AA06F88C4A1090 /* Pods_asmr_sleep_asmr_sleepTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FBA60A5B60F19E4AADB7DD9 /* Pods_asmr_sleep_asmr_sleepTests.framework */; };
+		EB53FBC52A237F5B00070A2A /* FontAwesome.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EBEE0D3229D2EB8D006C268D /* FontAwesome.ttf */; };
 		EBBFBB3029F430C4000FE256 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = EBBFBB2F29F430C4000FE256 /* GoogleService-Info.plist */; };
 		F6A24496BA0FDA9D28E64772 /* Pods_asmr_sleep.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 286DBED65529F07D7FACBBE1 /* Pods_asmr_sleep.framework */; };
 /* End PBXBuildFile section */
@@ -183,7 +184,6 @@
 				00E356EB1AD99517003FC87E /* Frameworks */,
 				00E356EC1AD99517003FC87E /* Resources */,
 				C59DA0FBD6956966B86A3779 /* [CP] Embed Pods Frameworks */,
-				F6A41C54EA430FDDC6A6ED99 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -206,7 +206,6 @@
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
-				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
 				254521132F192F0A7206D691 /* [CP-User] [RNFB] Core Configuration */,
 			);
 			buildRules = (
@@ -266,6 +265,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EB53FBC52A237F5B00070A2A /* FontAwesome.ttf in Resources */,
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				EBBFBB3029F430C4000FE256 /* GoogleService-Info.plist in Resources */,
@@ -380,40 +380,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-asmr sleep-asmr sleepTests/Pods-asmr sleep-asmr sleepTests-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		E235C05ADACE081382539298 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-asmr sleep/Pods-asmr sleep-resources-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-asmr sleep/Pods-asmr sleep-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-asmr sleep/Pods-asmr sleep-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		F6A41C54EA430FDDC6A6ED99 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-asmr sleep-asmr sleepTests/Pods-asmr sleep-asmr sleepTests-resources-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-asmr sleep-asmr sleepTests/Pods-asmr sleep-asmr sleepTests-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-asmr sleep-asmr sleepTests/Pods-asmr sleep-asmr sleepTests-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		FD10A7F022414F080027D42C /* Start Packager */ = {
@@ -536,12 +502,12 @@
 				INFOPLIST_FILE = asmrSleep/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "asmr Sleep";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.5;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -574,12 +540,12 @@
 				INFOPLIST_FILE = asmrSleep/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "asmr Sleep";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.5;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
