@@ -1,9 +1,17 @@
-import React from 'react';
-import {NavigationContainer} from '@react-navigation/native';
+import React, {useEffect, useRef, useState} from 'react';
+import {NavigationContainer, createNavigationContainerRef} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {Category, Home, PlaylistDetail, Playlists, Settings} from '../screens';
+import {
+  Category,
+  Home,
+  InitScreen,
+  PlaylistDetail,
+  Playlists,
+  Settings,
+} from '../screens';
 import AddPlaylistModal from '../components/AddPlaylistModal';
-import { Platform } from 'react-native';
+import {Platform} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const Stack = createNativeStackNavigator();
 
 const Dark = {
@@ -21,14 +29,17 @@ const AppNavigationContainer = () => {
   return (
     <NavigationContainer theme={Dark}>
       <Stack.Navigator
-        initialRouteName="Home"
+        initialRouteName="InitScreen"
         screenOptions={{
           headerShown: false,
         }}>
         <Stack.Group>
+          <Stack.Screen name="InitScreen" component={InitScreen}></Stack.Screen>
           <Stack.Screen name="Home" component={Home}></Stack.Screen>
           <Stack.Screen name="Playlist" component={Playlists}></Stack.Screen>
-          <Stack.Screen name="PlaylistDetail" component={PlaylistDetail}></Stack.Screen>
+          <Stack.Screen
+            name="PlaylistDetail"
+            component={PlaylistDetail}></Stack.Screen>
           <Stack.Screen name="Category" component={Category}></Stack.Screen>
           <Stack.Screen name="Settings" component={Settings}></Stack.Screen>
         </Stack.Group>
@@ -37,7 +48,9 @@ const AppNavigationContainer = () => {
             options={{
               animation: 'fade_from_bottom',
               presentation: 'modal',
-              contentStyle: {backgroundColor: Platform.OS == 'ios' ? 'transparent' : '#000'}
+              contentStyle: {
+                backgroundColor: Platform.OS == 'ios' ? 'transparent' : '#000',
+              },
             }}
             name="Modal"
             component={AddPlaylistModal}></Stack.Screen>
@@ -46,4 +59,4 @@ const AppNavigationContainer = () => {
     </NavigationContainer>
   );
 };
-export  default AppNavigationContainer
+export default AppNavigationContainer;
