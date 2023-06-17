@@ -36,6 +36,7 @@ const InitScreen = ({navigation}: any) => {
   const [loading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    console.log("HaNguyen", loading);
     AsyncStorage.getItem('PassedInitScreen').then(val => {
       if (val == 'ok') {
         navigation.navigate('Home');
